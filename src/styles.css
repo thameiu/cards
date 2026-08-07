@@ -211,6 +211,24 @@ select {
   line-height: 1.7;
 }
 
+.about-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--shockpink);
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+  text-underline-offset: 0.12em;
+}
+
+.about-link-badge {
+  display: block;
+  width: 88px;
+  height: 31px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
 .infinite-viewport {
   position: relative;
   height: 100%;
@@ -493,4 +511,11 @@ select {
     padding: 0 8px 8px;
     align-items: flex-start;
   }
+}
+
+.img-pile {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
 }
