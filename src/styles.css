@@ -229,6 +229,32 @@ select {
   flex: 0 0 auto;
 }
 
+.latex-frac {
+  display: inline-grid;
+  grid-template-rows: auto auto;
+  align-items: center;
+  justify-items: center;
+  vertical-align: middle;
+  margin: 0 0.12em;
+  line-height: 1;
+}
+
+.latex-frac-num,
+.latex-frac-den {
+  display: block;
+  padding: 0 0.32em;
+  font-size: 0.82em;
+}
+
+.latex-frac-num {
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 0.08em;
+}
+
+.latex-frac-den {
+  padding-top: 0.08em;
+}
+
 .infinite-viewport {
   position: relative;
   height: 100%;

@@ -5,6 +5,14 @@ export function AboutPage() {
     <main className="about-page">
       <div className="about-copy">
         <p>
+          Hello,{" "}
+          <span className="latex-frac" aria-label="mathieu over thameiu">
+            <span className="latex-frac-num">thameiu</span>
+            <span className="latex-frac-den">mathieu</span>
+          </span>{" "}
+          here.
+        </p>
+        <p>
           For several years, I’ve had a sort of passion for collecting cards. Not TCGs or other
           collectible cards, no. Random cards.
         </p>
