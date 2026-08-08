@@ -12,7 +12,7 @@ const FADE_DURATION_MS = 220;
 
 function getInitialViewMode(): ViewMode {
   if (typeof window === "undefined") {
-    return "scroll";
+    return "infinite";
   }
 
   const storedMode = window.localStorage.getItem(STORAGE_KEY);
@@ -20,7 +20,7 @@ function getInitialViewMode(): ViewMode {
     return storedMode;
   }
 
-  return "scroll";
+  return "infinite";
 }
 
 export default function App() {

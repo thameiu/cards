@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { OptimizedImage } from "./OptimizedImage";
 import type { CardData } from "../types";
 import { ensureCursorTracking, getCursorState } from "../lib/cursorTracker";
 
@@ -124,7 +125,12 @@ export function ImageCardThumb({
       onClick={onClick}
     >
       <div ref={frameRef} className="card-thumb-frame">
-        <img className="card-thumb-media" src={card.front} alt={card.label} loading="lazy" />
+        <OptimizedImage
+          className="card-thumb-media"
+          src={card.front}
+          alt={card.label}
+          fetchPriority="low"
+        />
       </div>
       {canPortal
         ? createPortal(

@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { createLayeredCard, getCardSize } from "../lib/threeCard";
+import { getImageSourceCandidates } from "../lib/imageSources";
 import type { CardData } from "../types";
 
 type Viewer3DProps = {
@@ -132,6 +133,20 @@ function positionCamera(camera: THREE.PerspectiveCamera, width: number, height: 
   camera.updateProjectionMatrix();
 }
 
+async function loadTextureWithFallback(loader: THREE.TextureLoader, src: string) {
+  const candidates = getImageSourceCandidates(src);
+
+  for (const candidate of candidates) {
+    try {
+      return await loader.loadAsync(candidate);
+    } catch {
+      continue;
+    }
+  }
+
+  throw new Error(`Failed to load texture for ${src}`);
+}
+
 export function Viewer3D({ card }: Viewer3DProps) {
   const mountRef = useRef<HTMLDivElement | null>(null);
 
@@ -214,8 +229,8 @@ export function Viewer3D({ card }: Viewer3DProps) {
     };
 
     Promise.all([
-      loader.loadAsync(card.front),
-      card.back ? loader.loadAsync(card.back).catch(() => null) : Promise.resolve(null),
+      loadTextureWithFallback(loader, card.front),
+      card.back ? loadTextureWithFallback(loader, card.back).catch(() => null) : Promise.resolve(null),
     ])
       .then(([frontTexture, backTexture]) => {
         if (disposed) {
