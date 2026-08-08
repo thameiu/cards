@@ -13,7 +13,11 @@ type GhostCard = {
 
 export function AboutPage() {
   const [ghostCards, setGhostCards] = useState<GhostCard[]>([]);
-  const [isTrailEnabled, setIsTrailEnabled] = useState(true);
+  const isCoarsePointer =
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(pointer: coarse)").matches;
+  const [isTrailEnabled, setIsTrailEnabled] = useState(!isCoarsePointer);
   const ghostIdRef = useRef(0);
   const lastSpawnRef = useRef(0);
   const pointerDownRef = useRef<{
@@ -38,6 +42,10 @@ export function AboutPage() {
   }, []);
 
   const spawnGhostCard = (clientX: number, clientY: number) => {
+    if (isCoarsePointer) {
+      return;
+    }
+
     const now = performance.now();
     if (now - lastSpawnRef.current < 55) {
       return;
@@ -79,9 +87,18 @@ export function AboutPage() {
         if (!isTrailEnabled) {
           return;
         }
+
+        if (isCoarsePointer && !pointerDownRef.current?.moved) {
+          return;
+        }
         spawnGhostCard(event.clientX, event.clientY);
       }}
       onPointerUp={() => {
+        if (isCoarsePointer) {
+          pointerDownRef.current = null;
+          return;
+        }
+
         const pointerDown = pointerDownRef.current;
         if (!pointerDown) {
           return;

@@ -79,13 +79,17 @@ export function CardModal({ card, onClose }: CardModalProps) {
   return (
     <div
       className={`modal-root${isVisible && !isClosing ? " is-visible" : ""}${isClosing ? " is-closing" : ""}`}
-      onClick={handleClose}
+      onPointerDown={(event) => {
+        if (event.target === event.currentTarget) {
+          handleClose();
+        }
+      }}
     >
       <div
         className={`modal-panel${isClosing ? " is-closing" : ""}`}
         data-enter-from={direction}
         data-exit-to={exitDirection}
-        onClick={(event) => event.stopPropagation()}
+        onPointerDown={(event) => event.stopPropagation()}
       >
         <button type="button" className="close-button" onClick={handleClose} aria-label="Close card">
           ×

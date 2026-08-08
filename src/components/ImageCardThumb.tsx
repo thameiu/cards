@@ -6,9 +6,10 @@ import { ensureCursorTracking, getCursorState } from "../lib/cursorTracker";
 
 type ImageCardThumbProps = {
   card: CardData;
-  onClick: () => void;
+  onClick?: () => void;
   className?: string;
   isTooltipDisabled?: boolean;
+  disableNativePress?: boolean;
 };
 
 function clamp(value: number, min: number, max: number) {
@@ -20,6 +21,7 @@ export function ImageCardThumb({
   onClick,
   className = "",
   isTooltipDisabled = false,
+  disableNativePress = false,
 }: ImageCardThumbProps) {
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const frameRef = useRef<HTMLDivElement | null>(null);
@@ -121,8 +123,9 @@ export function ImageCardThumb({
     <button
       ref={buttonRef}
       type="button"
+      data-card-id={card.id}
       className={`card-thumb ${className}`.trim()}
-      onClick={onClick}
+      onClick={disableNativePress ? undefined : onClick}
     >
       <div ref={frameRef} className="card-thumb-frame">
         <OptimizedImage

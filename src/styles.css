@@ -323,6 +323,7 @@ img,
   overflow: hidden;
   cursor: grab;
   touch-action: none;
+  overscroll-behavior: none;
 }
 
 .infinite-viewport.is-dragging {
@@ -332,19 +333,25 @@ img,
 .infinite-backdrop {
   position: absolute;
   inset: 0;
-  transform: translate3d(var(--grid-offset-x, 0px), var(--grid-offset-y, 0px), 0);
+  transform: translate3d(var(--grid-offset-x, 0px), var(--grid-offset-y, 0px), 0)
+    scale(var(--grid-scale, 1));
+  transform-origin: 0 0;
 }
 
 .infinite-layer {
   position: absolute;
   inset: 0;
-  transform: translate3d(var(--grid-offset-x, 0px), var(--grid-offset-y, 0px), 0);
+  transform: translate3d(var(--grid-offset-x, 0px), var(--grid-offset-y, 0px), 0)
+    scale(var(--grid-scale, 1));
+  transform-origin: 0 0;
+  touch-action: none;
 }
 
 .infinite-cell {
   position: absolute;
   display: grid;
   place-items: center;
+  touch-action: none;
 }
 
 .card-thumb {
@@ -354,6 +361,7 @@ img,
   padding: 0;
   background: transparent;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .card-thumb-tooltip {
@@ -408,7 +416,7 @@ img,
 .modal-root {
   position: fixed;
   inset: 0;
-  z-index: 20;
+  z-index: 200;
   display: flex;
   align-items: center;
   justify-content: center;

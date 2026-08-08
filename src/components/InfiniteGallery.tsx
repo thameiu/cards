@@ -23,109 +23,320 @@ const PRELOAD_COLUMNS = 3;
 const PRELOAD_ROWS = 2;
 const RECENTER_THRESHOLD_X = 1;
 const RECENTER_THRESHOLD_Y = 2;
+const MIN_ZOOM = 0.36;
+const MAX_ZOOM = 1;
 
 export function InfiniteGallery({ cards, onOpenCard, isModalOpen = false }: InfiniteGalleryProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [gridWindow, setGridWindow] = useState({ centerCol: 2, centerRow: 2 });
   const metrics = useViewportMetrics();
+  const isCoarsePointer =
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(pointer: coarse)").matches;
   const targetRef = useRef({ x: 0, y: 0 });
+  const scaleTargetRef = useRef(1);
+  const scaleRef = useRef(1);
   const dragRef = useRef<{
     pointerStartX: number;
     pointerStartY: number;
     originX: number;
     originY: number;
+    distanceStart: number | null;
+    scaleStart: number;
+    cardId: string | null;
+    moved: boolean;
   } | null>(null);
   const positionRef = useRef({ x: 0, y: 0 });
+  const viewportRef = useRef<HTMLElement | null>(null);
   const gridLayerRef = useRef<HTMLDivElement | null>(null);
   const gridBackdropRef = useRef<HTMLDivElement | null>(null);
   const gridWindowRef = useRef(gridWindow);
-  const cellSize = clamp(metrics.width * 0.24, 280, 420);
+  const baseCellSize = clamp(metrics.width * 0.24, 280, 420);
+  const pointerPositionsRef = useRef(new Map<number, { x: number; y: number }>());
+  const cardMap = useMemo(() => new Map(cards.map((card) => [card.id, card])), [cards]);
+
+  const syncGridTransforms = (nextX: number, nextY: number, nextScale: number) => {
+    gridLayerRef.current?.style.setProperty("--grid-offset-x", `${nextX}px`);
+    gridLayerRef.current?.style.setProperty("--grid-offset-y", `${nextY}px`);
+    gridLayerRef.current?.style.setProperty("--grid-scale", `${nextScale}`);
+
+    gridBackdropRef.current?.style.setProperty(
+      "--grid-offset-x",
+      `${wrap(nextX, baseCellSize * nextScale)}px`
+    );
+    gridBackdropRef.current?.style.setProperty(
+      "--grid-offset-y",
+      `${wrap(nextY, baseCellSize * nextScale)}px`
+    );
+    gridBackdropRef.current?.style.setProperty("--grid-scale", `${nextScale}`);
+  };
+
+  const syncGridWindow = (nextX: number, nextY: number, nextScale: number) => {
+    const scaledCellSize = baseCellSize * nextScale;
+    const nextCenterCol = Math.round((-nextX + metrics.width / 2) / scaledCellSize);
+    const nextCenterRow = Math.round((-nextY + metrics.height / 2) / scaledCellSize);
+    const currentWindow = gridWindowRef.current;
+
+    if (
+      Math.abs(nextCenterCol - currentWindow.centerCol) > RECENTER_THRESHOLD_X ||
+      Math.abs(nextCenterRow - currentWindow.centerRow) > RECENTER_THRESHOLD_Y
+    ) {
+      const nextWindow = { centerCol: nextCenterCol, centerRow: nextCenterRow };
+      gridWindowRef.current = nextWindow;
+      setGridWindow(nextWindow);
+    }
+  };
 
   useEffect(() => {
     gridWindowRef.current = gridWindow;
   }, [gridWindow]);
 
   useEffect(() => {
-    document.documentElement.style.setProperty("--cell-size", `${cellSize}px`);
-  }, [cellSize]);
+    document.documentElement.style.setProperty("--cell-size", `${baseCellSize * scaleRef.current}px`);
+  }, [baseCellSize]);
+
+  const zoomAtClientPoint = (
+    nextScale: number,
+    clientX: number,
+    clientY: number,
+    basisScale = scaleTargetRef.current,
+    basisX = targetRef.current.x,
+    basisY = targetRef.current.y
+  ) => {
+    const viewport = viewportRef.current;
+    if (!viewport) {
+      scaleTargetRef.current = nextScale;
+      return;
+    }
+
+    const rect = viewport.getBoundingClientRect();
+    const localX = clientX - rect.left;
+    const localY = clientY - rect.top;
+    const scaleRatio = nextScale / Math.max(basisScale, 0.0001);
+
+    targetRef.current = {
+      x: localX - (localX - basisX) * scaleRatio,
+      y: localY - (localY - basisY) * scaleRatio,
+    };
+    scaleTargetRef.current = nextScale;
+
+    if (isCoarsePointer) {
+      positionRef.current = { ...targetRef.current };
+      scaleRef.current = nextScale;
+      syncGridTransforms(positionRef.current.x, positionRef.current.y, scaleRef.current);
+      syncGridWindow(positionRef.current.x, positionRef.current.y, scaleRef.current);
+    }
+  };
+
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) {
+      return undefined;
+    }
+
+    const preventGesture = (event: Event) => {
+      event.preventDefault();
+    };
+
+    const handleWheel = (event: WheelEvent) => {
+      event.preventDefault();
+
+      if (event.ctrlKey || event.metaKey) {
+        const nextScale = clamp(
+          scaleTargetRef.current - event.deltaY * 0.0015,
+          MIN_ZOOM,
+          MAX_ZOOM
+        );
+        zoomAtClientPoint(nextScale, event.clientX, event.clientY);
+        return;
+      }
+
+      targetRef.current = {
+        x: targetRef.current.x - event.deltaX,
+        y: targetRef.current.y - event.deltaY,
+      };
+
+      if (isCoarsePointer) {
+        positionRef.current = { ...targetRef.current };
+        syncGridTransforms(positionRef.current.x, positionRef.current.y, scaleRef.current);
+        syncGridWindow(positionRef.current.x, positionRef.current.y, scaleRef.current);
+      }
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    };
+
+    viewport.addEventListener("wheel", handleWheel, { passive: false });
+    viewport.addEventListener("gesturestart", preventGesture, { passive: false });
+    viewport.addEventListener("gesturechange", preventGesture, { passive: false });
+    viewport.addEventListener("gestureend", preventGesture, { passive: false });
+    viewport.addEventListener("touchmove", handleTouchMove, { passive: false });
+
+    return () => {
+      viewport.removeEventListener("wheel", handleWheel);
+      viewport.removeEventListener("gesturestart", preventGesture);
+      viewport.removeEventListener("gesturechange", preventGesture);
+      viewport.removeEventListener("gestureend", preventGesture);
+      viewport.removeEventListener("touchmove", handleTouchMove);
+    };
+  }, []);
 
   useLayoutEffect(() => {
-    const syncGridTransforms = () => {
-      gridLayerRef.current?.style.setProperty("--grid-offset-x", `${positionRef.current.x}px`);
-      gridLayerRef.current?.style.setProperty("--grid-offset-y", `${positionRef.current.y}px`);
-
-      gridBackdropRef.current?.style.setProperty(
-        "--grid-offset-x",
-        `${wrap(positionRef.current.x, cellSize)}px`
-      );
-      gridBackdropRef.current?.style.setProperty(
-        "--grid-offset-y",
-        `${wrap(positionRef.current.y, cellSize)}px`
-      );
-    };
+    if (isCoarsePointer) {
+      positionRef.current = { ...targetRef.current };
+      scaleRef.current = scaleTargetRef.current;
+      syncGridTransforms(positionRef.current.x, positionRef.current.y, scaleRef.current);
+      return undefined;
+    }
 
     const updatePosition = () => {
       const current = positionRef.current;
-      const nextX = gsap.utils.interpolate(current.x, targetRef.current.x, 0.12);
-      const nextY = gsap.utils.interpolate(current.y, targetRef.current.y, 0.12);
+      const movementEase = 0.12;
+      const scaleEase = 0.14;
+      const nextX = gsap.utils.interpolate(current.x, targetRef.current.x, movementEase);
+      const nextY = gsap.utils.interpolate(current.y, targetRef.current.y, movementEase);
+      const nextScale = gsap.utils.interpolate(scaleRef.current, scaleTargetRef.current, scaleEase);
 
-      if (Math.abs(nextX - current.x) < 0.02 && Math.abs(nextY - current.y) < 0.02) {
-        syncGridTransforms();
+      if (
+        Math.abs(nextX - current.x) < 0.02 &&
+        Math.abs(nextY - current.y) < 0.02 &&
+        Math.abs(nextScale - scaleRef.current) < 0.001
+      ) {
+        syncGridTransforms(positionRef.current.x, positionRef.current.y, scaleRef.current);
         return;
       }
 
       positionRef.current = { x: nextX, y: nextY };
-      syncGridTransforms();
-
-      const nextCenterCol = Math.round((-nextX + metrics.width / 2) / cellSize);
-      const nextCenterRow = Math.round((-nextY + metrics.height / 2) / cellSize);
-      const currentWindow = gridWindowRef.current;
-
-      if (
-        Math.abs(nextCenterCol - currentWindow.centerCol) > RECENTER_THRESHOLD_X ||
-        Math.abs(nextCenterRow - currentWindow.centerRow) > RECENTER_THRESHOLD_Y
-      ) {
-        const nextWindow = { centerCol: nextCenterCol, centerRow: nextCenterRow };
-        gridWindowRef.current = nextWindow;
-        setGridWindow(nextWindow);
-      }
+      scaleRef.current = nextScale;
+      syncGridTransforms(nextX, nextY, nextScale);
+      syncGridWindow(nextX, nextY, nextScale);
     };
 
-    syncGridTransforms();
+    syncGridTransforms(positionRef.current.x, positionRef.current.y, scaleRef.current);
     gsap.ticker.add(updatePosition);
     return () => gsap.ticker.remove(updatePosition);
-  }, [cellSize, metrics.height, metrics.width]);
+  }, [baseCellSize, isCoarsePointer, metrics.height, metrics.width]);
 
   useEffect(() => {
     const onPointerMove = (event: PointerEvent) => {
+      pointerPositionsRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
       if (!dragRef.current) {
         return;
       }
 
+      const activePointers = Array.from(pointerPositionsRef.current.values());
+      if (activePointers.length >= 2 && dragRef.current.distanceStart) {
+        dragRef.current.moved = true;
+        setIsDragging(true);
+        const [firstPointer, secondPointer] = activePointers;
+        const distance = Math.hypot(
+          secondPointer.x - firstPointer.x,
+          secondPointer.y - firstPointer.y
+        );
+        const centerX = (firstPointer.x + secondPointer.x) / 2;
+        const centerY = (firstPointer.y + secondPointer.y) / 2;
+        const nextScale = clamp(
+          dragRef.current.scaleStart * (distance / dragRef.current.distanceStart),
+          MIN_ZOOM,
+          MAX_ZOOM
+        );
+        zoomAtClientPoint(
+          nextScale,
+          centerX,
+          centerY,
+          dragRef.current.scaleStart,
+          dragRef.current.originX,
+          dragRef.current.originY
+        );
+        return;
+      }
+
+      const dragMultiplier = isCoarsePointer ? 1.2 : 1;
       const deltaX = event.clientX - dragRef.current.pointerStartX;
       const deltaY = event.clientY - dragRef.current.pointerStartY;
+      const movementThreshold = dragRef.current.cardId ? (isCoarsePointer ? 18 : 6) : 0;
+      const movementDistance = Math.hypot(deltaX, deltaY);
+
+      if (!dragRef.current.moved) {
+        if (movementDistance <= movementThreshold) {
+          return;
+        }
+        dragRef.current.moved = true;
+        setIsDragging(true);
+      }
+
       targetRef.current = {
-        x: dragRef.current.originX + deltaX,
-        y: dragRef.current.originY + deltaY,
+        x: dragRef.current.originX + deltaX * dragMultiplier,
+        y: dragRef.current.originY + deltaY * dragMultiplier,
       };
+
+      if (isCoarsePointer) {
+        positionRef.current = { ...targetRef.current };
+        syncGridTransforms(positionRef.current.x, positionRef.current.y, scaleRef.current);
+        syncGridWindow(positionRef.current.x, positionRef.current.y, scaleRef.current);
+      }
     };
 
-    const onPointerUp = () => {
+    const onPointerUp = (event: PointerEvent) => {
+      pointerPositionsRef.current.delete(event.pointerId);
+
+      if (pointerPositionsRef.current.size >= 1 && dragRef.current) {
+        const remainingPointer = Array.from(pointerPositionsRef.current.values())[0];
+        dragRef.current = {
+          pointerStartX: remainingPointer.x,
+          pointerStartY: remainingPointer.y,
+          originX: targetRef.current.x,
+          originY: targetRef.current.y,
+          distanceStart: null,
+          scaleStart: scaleTargetRef.current,
+          cardId: null,
+          moved: true,
+        };
+        return;
+      }
+
+      const dragState = dragRef.current;
+      const tapThreshold = isCoarsePointer ? 18 : 6;
+      const tapDistance = dragState
+        ? Math.hypot(event.clientX - dragState.pointerStartX, event.clientY - dragState.pointerStartY)
+        : Number.POSITIVE_INFINITY;
+
+      if (dragState?.cardId && !dragState.moved && tapDistance <= tapThreshold && !isModalOpen) {
+        const card = cardMap.get(dragState.cardId);
+        if (card) {
+          onOpenCard(card);
+        }
+      }
+
       dragRef.current = null;
       setIsDragging(false);
     };
 
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerUp);
 
     return () => {
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerUp);
     };
-  }, []);
+  }, [cardMap, isCoarsePointer, isModalOpen, onOpenCard]);
 
-  const visibleRangeX = PRELOAD_COLUMNS;
-  const visibleRangeY = PRELOAD_ROWS;
+  const scaledCellSize = baseCellSize * scaleRef.current;
+  const visibleRangeX = Math.max(
+    PRELOAD_COLUMNS,
+    Math.ceil(metrics.width / Math.max(scaledCellSize, 1) / 2) + 3
+  );
+  const visibleRangeY = Math.max(
+    PRELOAD_ROWS,
+    Math.ceil(metrics.height / Math.max(scaledCellSize, 1) / 2) + 3
+  );
 
   const tiles = useMemo(() => {
     if (!cards.length) {
@@ -156,22 +367,43 @@ export function InfiniteGallery({ cards, onOpenCard, isModalOpen = false }: Infi
   }, [cards, gridWindow.centerCol, gridWindow.centerRow, visibleRangeX, visibleRangeY]);
   return (
     <main
+      ref={viewportRef}
       className={`infinite-viewport ${isDragging ? "is-dragging" : ""}`}
-      onWheel={(event) => {
-        event.preventDefault();
-        targetRef.current = {
-          x: targetRef.current.x - event.deltaX,
-          y: targetRef.current.y - event.deltaY,
-        };
-      }}
       onPointerDown={(event) => {
+        if (event.pointerType === "mouse" && event.button !== 0) {
+          return;
+        }
+        const target = event.target;
+        const cardButton =
+          target instanceof Element ? target.closest<HTMLButtonElement>(".card-thumb") : null;
+        const activePointerCount = pointerPositionsRef.current.size + 1;
+
+        if (!cardButton || activePointerCount > 1) {
+          event.preventDefault();
+        }
+
+        pointerPositionsRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        const activePointers = Array.from(pointerPositionsRef.current.values());
+        const hasPinch = activePointers.length >= 2;
+        const pinchDistance = hasPinch
+          ? Math.hypot(
+              activePointers[1].x - activePointers[0].x,
+              activePointers[1].y - activePointers[0].y
+            )
+          : null;
+
         dragRef.current = {
           pointerStartX: event.clientX,
           pointerStartY: event.clientY,
           originX: targetRef.current.x,
           originY: targetRef.current.y,
+          distanceStart: pinchDistance,
+          scaleStart: scaleTargetRef.current,
+          cardId: hasPinch ? null : cardButton?.dataset.cardId ?? null,
+          moved: false,
         };
-        setIsDragging(true);
+        setIsDragging(false);
+        (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
       }}
     >
       <div ref={gridBackdropRef} className="infinite-backdrop" />
@@ -181,15 +413,15 @@ export function InfiniteGallery({ cards, onOpenCard, isModalOpen = false }: Infi
             key={tile.key}
             className="infinite-cell"
             style={{
-              left: `${tile.col * cellSize}px`,
-              top: `${tile.row * cellSize}px`,
-              width: `${cellSize}px`,
-              height: `${cellSize}px`,
+              left: `${tile.col * baseCellSize}px`,
+              top: `${tile.row * baseCellSize}px`,
+              width: `${baseCellSize}px`,
+              height: `${baseCellSize}px`,
             }}
           >
             <ImageCardThumb
               card={tile.card}
-              onClick={() => onOpenCard(tile.card)}
+              disableNativePress
               isTooltipDisabled={isModalOpen}
             />
           </div>
