@@ -204,8 +204,8 @@ export function AboutPage() {
           >
             repo
           </a>{" "}
-          on GitHub. FYI, I will NOT scan your cards for you, and I will not be coding an
-          automation for this, so good luck.
+          on GitHub. FYI, I will NOT be coding an
+          automation to crop and edit the cards correctly, so good luck.
         </p>
       </div>
     </main>
