@@ -12,12 +12,13 @@ export function ScrollableGallery({ cards, onOpenCard, isModalOpen = false }: Sc
     <main className="cards-scroll">
       <div className="cards-grid">
         {cards.map((card) => (
-          <ImageCardThumb
-            key={card.id}
-            card={card}
-            onClick={() => onOpenCard(card)}
-            isTooltipDisabled={isModalOpen}
-          />
+          <div key={card.id} className="cards-grid-item">
+            <ImageCardThumb
+              card={card}
+              onClick={() => onOpenCard(card)}
+              isTooltipDisabled={isModalOpen}
+            />
+          </div>
         ))}
       </div>
     </main>

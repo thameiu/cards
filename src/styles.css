@@ -18,6 +18,7 @@
   --eggplant: #19001a;
   --shockpink: #c41bd4;
   --alabaster: #faf9fa;
+  --card-ratio: 1.54;
   --bg: var(--alabaster);
   --text: #111827;
   --muted: #6b7280;
@@ -208,8 +209,17 @@ img,
 .cards-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 28px 20px;
-  align-items: start;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 34px 26px;
+}
+
+.cards-grid-item {
+  --thumb-long-side: 80%;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: grid;
+  place-items: center;
 }
 
 .about-page {
@@ -348,6 +358,7 @@ img,
 }
 
 .infinite-cell {
+  --thumb-long-side: 86%;
   position: absolute;
   display: grid;
   place-items: center;
@@ -356,12 +367,21 @@ img,
 
 .card-thumb {
   display: block;
-  width: min(84%, 300px);
   border: 0;
   padding: 0;
   background: transparent;
   cursor: pointer;
   touch-action: manipulation;
+}
+
+.card-thumb.is-landscape {
+  width: var(--thumb-long-side);
+  height: calc(var(--thumb-long-side) / var(--card-ratio));
+}
+
+.card-thumb.is-portrait {
+  width: calc(var(--thumb-long-side) / var(--card-ratio));
+  height: var(--thumb-long-side);
 }
 
 .card-thumb-tooltip {
@@ -397,7 +417,7 @@ img,
   --tilt-x: 0deg;
   --tilt-y: 0deg;
   width: 100%;
-  aspect-ratio: 1.62 / 1;
+  height: 100%;
   position: relative;
   transform: perspective(1200px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
   transform-style: preserve-3d;
@@ -536,10 +556,6 @@ img,
 }
 
 @media (max-width: 1100px) {
-  .cards-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
   .modal-panel {
     width: min(94vw, calc(82vh * 7 / 4));
     aspect-ratio: 7 / 4;
@@ -595,13 +611,11 @@ img,
 
   .cards-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    justify-content: center;
-    gap: 20px 16px;
+    gap: 24px 20px;
   }
 
   .card-thumb {
-    width: min(100%, 220px);
-    margin: 0 auto;
+    margin: 0;
   }
 
   .modal-root {

@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { gsap } from "gsap";
+import type { CSSProperties } from "react";
 import type { CardData } from "../types";
 import { ImageCardThumb } from "./ImageCardThumb";
 import { useViewportMetrics } from "../hooks/useViewportMetrics";
@@ -19,12 +20,20 @@ type InfiniteGalleryProps = {
   isModalOpen?: boolean;
 };
 
-const PRELOAD_COLUMNS = 3;
-const PRELOAD_ROWS = 2;
+const PRELOAD_COLUMNS = 2;
+const PRELOAD_ROWS = 1;
 const RECENTER_THRESHOLD_X = 1;
 const RECENTER_THRESHOLD_Y = 2;
 const MIN_ZOOM = 0.36;
 const MAX_ZOOM = 1;
+const DESKTOP_SCROLL_PADDING_X = 34 * 2;
+const DESKTOP_SCROLL_GAP_X = 26 * 4;
+const MOBILE_SCROLL_PADDING_X = 20 * 2;
+const MOBILE_SCROLL_GAP_X = 20;
+const DESKTOP_GRID_GAP_X = 26;
+const DESKTOP_GRID_GAP_Y = 34;
+const MOBILE_GRID_GAP_X = 20;
+const MOBILE_GRID_GAP_Y = 24;
 
 export function InfiniteGallery({ cards, onOpenCard, isModalOpen = false }: InfiniteGalleryProps) {
   const [isDragging, setIsDragging] = useState(false);
@@ -37,6 +46,7 @@ export function InfiniteGallery({ cards, onOpenCard, isModalOpen = false }: Infi
   const targetRef = useRef({ x: 0, y: 0 });
   const scaleTargetRef = useRef(1);
   const scaleRef = useRef(1);
+  const momentumRef = useRef({ x: 0, y: 0 });
   const dragRef = useRef<{
     pointerStartX: number;
     pointerStartY: number;
@@ -46,13 +56,23 @@ export function InfiniteGallery({ cards, onOpenCard, isModalOpen = false }: Infi
     scaleStart: number;
     cardId: string | null;
     moved: boolean;
+    lastClientX: number;
+    lastClientY: number;
+    lastTimeStamp: number;
   } | null>(null);
   const positionRef = useRef({ x: 0, y: 0 });
   const viewportRef = useRef<HTMLElement | null>(null);
   const gridLayerRef = useRef<HTMLDivElement | null>(null);
   const gridBackdropRef = useRef<HTMLDivElement | null>(null);
   const gridWindowRef = useRef(gridWindow);
-  const baseCellSize = clamp(metrics.width * 0.24, 280, 420);
+  const isDraggingRef = useRef(false);
+  const isMobileLayout = metrics.width <= 720;
+  const baseCellSize =
+    isMobileLayout
+      ? (metrics.width - MOBILE_SCROLL_PADDING_X - MOBILE_SCROLL_GAP_X) / 2
+      : (metrics.width - DESKTOP_SCROLL_PADDING_X - DESKTOP_SCROLL_GAP_X) / 5;
+  const stepX = baseCellSize + (isMobileLayout ? MOBILE_GRID_GAP_X : DESKTOP_GRID_GAP_X);
+  const stepY = baseCellSize + (isMobileLayout ? MOBILE_GRID_GAP_Y : DESKTOP_GRID_GAP_Y);
   const pointerPositionsRef = useRef(new Map<number, { x: number; y: number }>());
   const cardMap = useMemo(() => new Map(cards.map((card) => [card.id, card])), [cards]);
 
@@ -63,19 +83,29 @@ export function InfiniteGallery({ cards, onOpenCard, isModalOpen = false }: Infi
 
     gridBackdropRef.current?.style.setProperty(
       "--grid-offset-x",
-      `${wrap(nextX, baseCellSize * nextScale)}px`
+      `${wrap(nextX, stepX * nextScale)}px`
     );
     gridBackdropRef.current?.style.setProperty(
       "--grid-offset-y",
-      `${wrap(nextY, baseCellSize * nextScale)}px`
+      `${wrap(nextY, stepY * nextScale)}px`
     );
     gridBackdropRef.current?.style.setProperty("--grid-scale", `${nextScale}`);
   };
 
+  const updateDragging = (nextValue: boolean) => {
+    if (isDraggingRef.current === nextValue) {
+      return;
+    }
+
+    isDraggingRef.current = nextValue;
+    setIsDragging(nextValue);
+  };
+
   const syncGridWindow = (nextX: number, nextY: number, nextScale: number) => {
-    const scaledCellSize = baseCellSize * nextScale;
-    const nextCenterCol = Math.round((-nextX + metrics.width / 2) / scaledCellSize);
-    const nextCenterRow = Math.round((-nextY + metrics.height / 2) / scaledCellSize);
+    const scaledStepX = stepX * nextScale;
+    const scaledStepY = stepY * nextScale;
+    const nextCenterCol = Math.round((-nextX + metrics.width / 2) / scaledStepX);
+    const nextCenterRow = Math.round((-nextY + metrics.height / 2) / scaledStepY);
     const currentWindow = gridWindowRef.current;
 
     if (
@@ -120,13 +150,6 @@ export function InfiniteGallery({ cards, onOpenCard, isModalOpen = false }: Infi
       y: localY - (localY - basisY) * scaleRatio,
     };
     scaleTargetRef.current = nextScale;
-
-    if (isCoarsePointer) {
-      positionRef.current = { ...targetRef.current };
-      scaleRef.current = nextScale;
-      syncGridTransforms(positionRef.current.x, positionRef.current.y, scaleRef.current);
-      syncGridWindow(positionRef.current.x, positionRef.current.y, scaleRef.current);
-    }
   };
 
   useEffect(() => {
@@ -156,12 +179,6 @@ export function InfiniteGallery({ cards, onOpenCard, isModalOpen = false }: Infi
         x: targetRef.current.x - event.deltaX,
         y: targetRef.current.y - event.deltaY,
       };
-
-      if (isCoarsePointer) {
-        positionRef.current = { ...targetRef.current };
-        syncGridTransforms(positionRef.current.x, positionRef.current.y, scaleRef.current);
-        syncGridWindow(positionRef.current.x, positionRef.current.y, scaleRef.current);
-      }
     };
 
     const handleTouchMove = (event: TouchEvent) => {
@@ -187,10 +204,47 @@ export function InfiniteGallery({ cards, onOpenCard, isModalOpen = false }: Infi
 
   useLayoutEffect(() => {
     if (isCoarsePointer) {
-      positionRef.current = { ...targetRef.current };
-      scaleRef.current = scaleTargetRef.current;
+      let animationFrame = 0;
+
+      const updatePosition = () => {
+        if (!dragRef.current) {
+          momentumRef.current.x *= 0.92;
+          momentumRef.current.y *= 0.92;
+
+          if (Math.abs(momentumRef.current.x) < 0.02) {
+            momentumRef.current.x = 0;
+          }
+
+          if (Math.abs(momentumRef.current.y) < 0.02) {
+            momentumRef.current.y = 0;
+          }
+
+          targetRef.current = {
+            x: targetRef.current.x + momentumRef.current.x,
+            y: targetRef.current.y + momentumRef.current.y,
+          };
+        }
+
+        const current = positionRef.current;
+        const movementEase = isDraggingRef.current ? 0.22 : 0.14;
+        const scaleEase = 0.18;
+        const nextX = current.x + (targetRef.current.x - current.x) * movementEase;
+        const nextY = current.y + (targetRef.current.y - current.y) * movementEase;
+        const nextScale =
+          scaleRef.current + (scaleTargetRef.current - scaleRef.current) * scaleEase;
+
+        positionRef.current = { x: nextX, y: nextY };
+        scaleRef.current = nextScale;
+        syncGridTransforms(nextX, nextY, nextScale);
+        syncGridWindow(nextX, nextY, nextScale);
+        animationFrame = window.requestAnimationFrame(updatePosition);
+      };
+
       syncGridTransforms(positionRef.current.x, positionRef.current.y, scaleRef.current);
-      return undefined;
+      syncGridWindow(positionRef.current.x, positionRef.current.y, scaleRef.current);
+      animationFrame = window.requestAnimationFrame(updatePosition);
+
+      return () => window.cancelAnimationFrame(animationFrame);
     }
 
     const updatePosition = () => {
@@ -219,7 +273,7 @@ export function InfiniteGallery({ cards, onOpenCard, isModalOpen = false }: Infi
     syncGridTransforms(positionRef.current.x, positionRef.current.y, scaleRef.current);
     gsap.ticker.add(updatePosition);
     return () => gsap.ticker.remove(updatePosition);
-  }, [baseCellSize, isCoarsePointer, metrics.height, metrics.width]);
+  }, [baseCellSize, isCoarsePointer, metrics.height, metrics.width, stepX, stepY]);
 
   useEffect(() => {
     const onPointerMove = (event: PointerEvent) => {
@@ -232,7 +286,8 @@ export function InfiniteGallery({ cards, onOpenCard, isModalOpen = false }: Infi
       const activePointers = Array.from(pointerPositionsRef.current.values());
       if (activePointers.length >= 2 && dragRef.current.distanceStart) {
         dragRef.current.moved = true;
-        setIsDragging(true);
+        updateDragging(true);
+        momentumRef.current = { x: 0, y: 0 };
         const [firstPointer, secondPointer] = activePointers;
         const distance = Math.hypot(
           secondPointer.x - firstPointer.x,
@@ -267,7 +322,7 @@ export function InfiniteGallery({ cards, onOpenCard, isModalOpen = false }: Infi
           return;
         }
         dragRef.current.moved = true;
-        setIsDragging(true);
+        updateDragging(true);
       }
 
       targetRef.current = {
@@ -275,10 +330,21 @@ export function InfiniteGallery({ cards, onOpenCard, isModalOpen = false }: Infi
         y: dragRef.current.originY + deltaY * dragMultiplier,
       };
 
+      const elapsed = Math.max(event.timeStamp - dragRef.current.lastTimeStamp, 16);
+      const velocityX =
+        ((event.clientX - dragRef.current.lastClientX) * dragMultiplier) / elapsed;
+      const velocityY =
+        ((event.clientY - dragRef.current.lastClientY) * dragMultiplier) / elapsed;
+
+      dragRef.current.lastClientX = event.clientX;
+      dragRef.current.lastClientY = event.clientY;
+      dragRef.current.lastTimeStamp = event.timeStamp;
+
       if (isCoarsePointer) {
-        positionRef.current = { ...targetRef.current };
-        syncGridTransforms(positionRef.current.x, positionRef.current.y, scaleRef.current);
-        syncGridWindow(positionRef.current.x, positionRef.current.y, scaleRef.current);
+        momentumRef.current = {
+          x: velocityX * 18,
+          y: velocityY * 18,
+        };
       }
     };
 
@@ -313,8 +379,12 @@ export function InfiniteGallery({ cards, onOpenCard, isModalOpen = false }: Infi
         }
       }
 
+      if (!isCoarsePointer || !dragState?.moved || dragState.distanceStart) {
+        momentumRef.current = { x: 0, y: 0 };
+      }
+
       dragRef.current = null;
-      setIsDragging(false);
+      updateDragging(false);
     };
 
     window.addEventListener("pointermove", onPointerMove);
@@ -328,14 +398,15 @@ export function InfiniteGallery({ cards, onOpenCard, isModalOpen = false }: Infi
     };
   }, [cardMap, isCoarsePointer, isModalOpen, onOpenCard]);
 
-  const scaledCellSize = baseCellSize * scaleRef.current;
+  const scaledStepX = stepX * scaleRef.current;
+  const scaledStepY = stepY * scaleRef.current;
   const visibleRangeX = Math.max(
     PRELOAD_COLUMNS,
-    Math.ceil(metrics.width / Math.max(scaledCellSize, 1) / 2) + 3
+    Math.ceil(metrics.width / Math.max(scaledStepX, 1) / 2) + 2
   );
   const visibleRangeY = Math.max(
     PRELOAD_ROWS,
-    Math.ceil(metrics.height / Math.max(scaledCellSize, 1) / 2) + 3
+    Math.ceil(metrics.height / Math.max(scaledStepY, 1) / 2) + 2
   );
 
   const tiles = useMemo(() => {
@@ -382,6 +453,8 @@ export function InfiniteGallery({ cards, onOpenCard, isModalOpen = false }: Infi
           event.preventDefault();
         }
 
+        momentumRef.current = { x: 0, y: 0 };
+
         pointerPositionsRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
         const activePointers = Array.from(pointerPositionsRef.current.values());
         const hasPinch = activePointers.length >= 2;
@@ -401,8 +474,11 @@ export function InfiniteGallery({ cards, onOpenCard, isModalOpen = false }: Infi
           scaleStart: scaleTargetRef.current,
           cardId: hasPinch ? null : cardButton?.dataset.cardId ?? null,
           moved: false,
+          lastClientX: event.clientX,
+          lastClientY: event.clientY,
+          lastTimeStamp: event.timeStamp,
         };
-        setIsDragging(false);
+        updateDragging(false);
         (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
       }}
     >
@@ -413,15 +489,17 @@ export function InfiniteGallery({ cards, onOpenCard, isModalOpen = false }: Infi
             key={tile.key}
             className="infinite-cell"
             style={{
-              left: `${tile.col * baseCellSize}px`,
-              top: `${tile.row * baseCellSize}px`,
+              "--thumb-long-side": `${baseCellSize}px`,
+              left: `${tile.col * stepX}px`,
+              top: `${tile.row * stepY}px`,
               width: `${baseCellSize}px`,
               height: `${baseCellSize}px`,
-            }}
+            } as CSSProperties}
           >
             <ImageCardThumb
               card={tile.card}
               disableNativePress
+              limitEffectsToViewport
               isTooltipDisabled={isModalOpen}
             />
           </div>
