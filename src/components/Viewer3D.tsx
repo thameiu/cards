@@ -1,9 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { createLayeredCard, getCardSize } from "../lib/threeCard";
 import { getImageSourceCandidates } from "../lib/imageSources";
 import type { CardData } from "../types";
+import { Loader } from "./Loader";
 
 type Viewer3DProps = {
   card: CardData;
@@ -149,12 +150,15 @@ async function loadTextureWithFallback(loader: THREE.TextureLoader, src: string)
 
 export function Viewer3D({ card }: Viewer3DProps) {
   const mountRef = useRef<HTMLDivElement | null>(null);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) {
       return undefined;
     }
+
+    setIsReady(false);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -259,6 +263,7 @@ export function Viewer3D({ card }: Viewer3DProps) {
         cardSize = getCardSize(aspectRatio);
         scene.add(cardGroup);
         updateSize();
+        setIsReady(true);
 
         frontTexture.dispose();
         backTexture?.dispose();
@@ -266,6 +271,7 @@ export function Viewer3D({ card }: Viewer3DProps) {
       })
       .catch((error) => {
         console.error("Failed to load card textures", error);
+        setIsReady(true);
       });
 
     const resizeObserver = new ResizeObserver(updateSize);
@@ -304,7 +310,8 @@ export function Viewer3D({ card }: Viewer3DProps) {
   }, [card]);
 
   return (
-    <div className="viewer-shell">
+    <div className={`viewer-shell${isReady ? " is-ready" : " is-loading"}`}>
+      {!isReady ? <Loader className="viewer-loader" /> : null}
       <div ref={mountRef} className="viewer-mount" />
     </div>
   );

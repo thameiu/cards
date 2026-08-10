@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CardData } from "../types";
 import { Viewer3D } from "./Viewer3D";
 
@@ -8,31 +8,10 @@ type CardModalProps = {
 };
 
 const MODAL_ANIMATION_MS = 420;
-const DIRECTIONS = ["top", "right", "bottom", "left"] as const;
-
-type Direction = (typeof DIRECTIONS)[number];
-
-function getExitDirection(direction: Direction): Direction {
-  if (direction === "top") {
-    return "bottom";
-  }
-  if (direction === "right") {
-    return "left";
-  }
-  if (direction === "bottom") {
-    return "top";
-  }
-  return "right";
-}
-
 export function CardModal({ card, onClose }: CardModalProps) {
   const [isClosing, setIsClosing] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const closeTimeoutRef = useRef<number | null>(null);
-  const direction = useMemo<Direction>(() => {
-    return DIRECTIONS[Math.floor(Math.random() * DIRECTIONS.length)];
-  }, []);
-  const exitDirection = getExitDirection(direction);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -87,8 +66,6 @@ export function CardModal({ card, onClose }: CardModalProps) {
     >
       <div
         className={`modal-panel${isClosing ? " is-closing" : ""}`}
-        data-enter-from={direction}
-        data-exit-to={exitDirection}
         onPointerDown={(event) => event.stopPropagation()}
       >
         <button type="button" className="close-button" onClick={handleClose} aria-label="Close card">
