@@ -91,7 +91,12 @@ function createBackTexture(sourceTexture: THREE.Texture | null, canvasWidth: num
   return texture;
 }
 
-function createMaskTexture(sourceTexture: THREE.Texture, canvasWidth: number, canvasHeight: number) {
+function createMaskTexture(
+  sourceTexture: THREE.Texture,
+  canvasWidth: number,
+  canvasHeight: number,
+  flipX = false
+) {
   const canvas = document.createElement("canvas");
   canvas.width = canvasWidth;
   canvas.height = canvasHeight;
@@ -102,7 +107,14 @@ function createMaskTexture(sourceTexture: THREE.Texture, canvasWidth: number, ca
   }
 
   const sourceImage = sourceTexture.image as TexImageSource | ImageBitmap;
+  if (flipX) {
+    context.translate(canvas.width, 0);
+    context.scale(-1, 1);
+  }
   drawImageCover(context, sourceImage, canvas.width, canvas.height);
+  if (flipX) {
+    context.setTransform(1, 0, 0, 1, 0, 0);
+  }
 
   const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
   const { data } = imageData;
@@ -251,15 +263,25 @@ export function Viewer3D({ card }: Viewer3DProps) {
 
         const composedFrontTexture = createFaceTexture(frontTexture, canvasWidth, canvasHeight);
         const composedBackTexture = createBackTexture(backTexture, canvasWidth, canvasHeight);
-        const maskTexture = createMaskTexture(frontTexture, canvasWidth, canvasHeight);
+        const frontMaskTexture = createMaskTexture(frontTexture, canvasWidth, canvasHeight);
+        const backMaskTexture = createMaskTexture(frontTexture, canvasWidth, canvasHeight, true);
 
-        for (const texture of [composedFrontTexture, composedBackTexture, maskTexture]) {
+        for (const texture of [
+          composedFrontTexture,
+          composedBackTexture,
+          frontMaskTexture,
+          backMaskTexture,
+        ]) {
           texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
         }
 
-        cardGroup = createLayeredCard(composedFrontTexture, composedBackTexture, maskTexture, {
-          aspectRatio,
-        });
+        cardGroup = createLayeredCard(
+          composedFrontTexture,
+          composedBackTexture,
+          frontMaskTexture,
+          backMaskTexture,
+          { aspectRatio }
+        );
         cardSize = getCardSize(aspectRatio);
         scene.add(cardGroup);
         updateSize();

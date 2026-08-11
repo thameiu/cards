@@ -33,13 +33,14 @@ export function getCardSize(aspectRatio: number): CardSize {
 export function createLayeredCard(
   frontTexture: THREE.Texture,
   backTexture: THREE.Texture,
-  maskTexture: THREE.Texture,
+  frontMaskTexture: THREE.Texture,
+  backMaskTexture: THREE.Texture,
   options: CreateCardOptions
 ) {
   const { width, height, depth } = getCardSize(options.aspectRatio);
   const frontMaterial = new THREE.MeshPhongMaterial({
     map: frontTexture,
-    alphaMap: maskTexture,
+    alphaMap: frontMaskTexture,
     transparent: true,
     alphaTest: 0.5,
     color: 0xffffff,
@@ -50,7 +51,7 @@ export function createLayeredCard(
 
   const backMaterial = new THREE.MeshPhongMaterial({
     map: backTexture,
-    alphaMap: maskTexture,
+    alphaMap: backMaskTexture,
     transparent: true,
     alphaTest: 0.5,
     color: 0xffffff,
@@ -67,7 +68,7 @@ export function createLayeredCard(
   for (let index = 0; index < layerCount; index += 1) {
     const layerMaterial = new THREE.MeshPhongMaterial({
       color: 0xffffff,
-      alphaMap: maskTexture,
+      alphaMap: frontMaskTexture,
       transparent: true,
       alphaTest: 0.5,
       specular: new THREE.Color(0x242424),
