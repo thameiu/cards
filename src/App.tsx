@@ -81,7 +81,6 @@ export default function App() {
       cancelled = true;
     };
   }, [galleryImageSources]);
-
   const handleSelectView = (nextMode: ViewMode) => {
     if (isFading || nextMode === viewMode) {
       return;
