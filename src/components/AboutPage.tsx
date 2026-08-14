@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { cardList } from "../CardList";
+import type { CardData } from "../types";
 import { OptimizedImage } from "./OptimizedImage";
 
 type GhostCard = {
@@ -11,7 +11,12 @@ type GhostCard = {
   rotation: number;
 };
 
-export function AboutPage() {
+type AboutPageProps = {
+  cards: CardData[];
+  totalCardCount: number;
+};
+
+export function AboutPage({ cards, totalCardCount }: AboutPageProps) {
   const [ghostCards, setGhostCards] = useState<GhostCard[]>([]);
   const isCoarsePointer =
     typeof window !== "undefined" &&
@@ -51,8 +56,12 @@ export function AboutPage() {
       return;
     }
 
+    if (!cards.length) {
+      return;
+    }
+
     lastSpawnRef.current = now;
-    const card = cardList[Math.floor(Math.random() * cardList.length)];
+    const card = cards[Math.floor(Math.random() * cards.length)];
     const src = Math.random() > 0.5 && card.back ? card.back : card.front;
     const id = ghostIdRef.current++;
     const rotation = (Math.random() - 0.5) * 26;
@@ -165,11 +174,10 @@ export function AboutPage() {
           something creative I could do with them.
         </p>
 
-
         <p>
           Then I remembered I’ve been a computer science student for three years. The idea of a
           digital notebook came to me. So I created “Cards”, a digital binder that currently
-          contains {cardList.length} cards, scanned on both sides and then edited and properly
+          contains {totalCardCount} cards, scanned on both sides and then edited and properly
           cropped so they can be displayed exactly as they look in real life.
         </p>
 

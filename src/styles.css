@@ -104,6 +104,85 @@ img,
   place-items: center;
 }
 
+.filter-dock {
+  position: fixed;
+  right: 20px;
+  bottom: 78px;
+  z-index: 129;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.filter-dock-tags {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.filter-dock.is-open .filter-dock-tags {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.filter-toggle-shell {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 130;
+  width: 48px;
+  height: 48px;
+  color: var(--eggplant);
+  pointer-events: none;
+}
+
+.filter-toggle-button {
+  width: 100%;
+  height: 100%;
+  border: 1px solid currentColor;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.filter-toggle-icon {
+  width: 22px;
+  height: 22px;
+  display: block;
+  fill: currentColor;
+}
+
+.filter-tag,
+.modal-tag {
+  border-radius: 0;
+  font-family: "Atkinson", sans-serif;
+  font-size: clamp(0.8rem, 1.2vw, 1rem);
+  line-height: 1;
+  text-transform: lowercase;
+}
+
+.filter-tag {
+  border: 1px solid var(--tag-color);
+  padding: 8px 10px;
+  background: #fff;
+  color: var(--tag-color);
+  cursor: pointer;
+}
+
+.filter-tag.is-selected {
+  background: var(--tag-color);
+  color: var(--tag-text-color);
+}
+
 .site-header {
   position: fixed;
   top: 0;
@@ -547,9 +626,33 @@ img,
 .modal-copy {
   min-height: 0;
   display: flex;
+  flex-direction: column;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   padding: 32px 24px 24px 0;
+}
+
+.modal-meta {
+  margin-bottom: 12px;
+}
+
+.modal-title {
+  margin: 0 0 10px;
+  color: var(--text);
+  font-size: clamp(0.8rem, 1.2vw, 1rem);
+  line-height: 1.5;
+}
+
+.modal-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.modal-tag {
+  padding: 8px 10px;
+  background: var(--tag-color);
+  color: var(--tag-text-color);
 }
 
 .modal-description {
@@ -608,6 +711,20 @@ img,
 
 .viewer-mount {
   transition: opacity 180ms ease-in-out;
+}
+
+@supports (mix-blend-mode: difference) {
+  .filter-toggle-shell {
+    color: #fff;
+    mix-blend-mode: difference;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .filter-tag:hover {
+    background: var(--tag-color);
+    color: var(--tag-text-color);
+  }
 }
 
 @media (max-width: 1100px) {
@@ -689,6 +806,23 @@ img,
   .modal-copy {
     padding: 0 8px 8px;
     align-items: flex-start;
+  }
+
+  .filter-dock {
+    right: 12px;
+    bottom: 68px;
+  }
+
+  .filter-toggle-shell {
+    right: 12px;
+    bottom: 12px;
+    width: 44px;
+    height: 44px;
+  }
+
+  .filter-toggle-button {
+    width: 100%;
+    height: 100%;
   }
 }
 

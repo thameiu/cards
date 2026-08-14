@@ -3,11 +3,12 @@ import { cardList } from "./CardList";
 import { AboutPage } from "./components/AboutPage";
 import { AppHeader } from "./components/AppHeader";
 import { CardModal } from "./components/CardModal";
+import { FilterDock } from "./components/FilterDock";
 import { InfiniteGallery } from "./components/InfiniteGallery";
 import { Loader } from "./components/Loader";
 import { ScrollableGallery } from "./components/ScrollableGallery";
 import { getImageSourceCandidates } from "./lib/imageSources";
-import type { CardData, ViewMode } from "./types";
+import type { CardData, CardTag, ViewMode } from "./types";
 
 const STORAGE_KEY = "cards-view-mode";
 const FADE_DURATION_MS = 220;
@@ -57,10 +58,19 @@ export default function App() {
   const [displayMode, setDisplayMode] = useState<ViewMode>(getInitialViewMode);
   const [isFading, setIsFading] = useState(false);
   const [areGalleryImagesReady, setAreGalleryImagesReady] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<CardTag[]>([]);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const galleryImageSources = useMemo(
     () => Array.from(new Set(cardList.map((card) => card.front))),
     []
   );
+  const filteredCards = useMemo(() => {
+    if (!selectedTags.length) {
+      return cardList;
+    }
+
+    return cardList.filter((card) => card.tags.some((tag) => selectedTags.includes(tag)));
+  }, [selectedTags]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -81,6 +91,21 @@ export default function App() {
       cancelled = true;
     };
   }, [galleryImageSources]);
+
+  useEffect(() => {
+    if (selectedCard && !filteredCards.some((card) => card.id === selectedCard.id)) {
+      setSelectedCard(null);
+    }
+  }, [filteredCards, selectedCard]);
+
+  const handleToggleTag = (tag: CardTag) => {
+    setSelectedTags((current) =>
+      current.includes(tag)
+        ? current.filter((currentTag) => currentTag !== tag)
+        : [...current, tag]
+    );
+  };
+
   const handleSelectView = (nextMode: ViewMode) => {
     if (isFading || nextMode === viewMode) {
       return;
@@ -103,18 +128,29 @@ export default function App() {
 
       <div className={`gallery-shell ${isFading ? "is-fading" : "is-visible"}`}>
         {displayMode === "about" ? (
-          <AboutPage />
+          <AboutPage cards={filteredCards} totalCardCount={cardList.length} />
         ) : !areGalleryImagesReady ? (
           <div className="gallery-loader-screen">
             <Loader />
           </div>
         ) : displayMode === "scroll" ? (
-          <ScrollableGallery cards={cardList} onOpenCard={setSelectedCard} isModalOpen={Boolean(selectedCard)} />
+          <ScrollableGallery cards={filteredCards} onOpenCard={setSelectedCard} isModalOpen={Boolean(selectedCard)} />
         ) : (
-          <InfiniteGallery cards={cardList} onOpenCard={setSelectedCard} isModalOpen={Boolean(selectedCard)} />
+          <InfiniteGallery
+            key={selectedTags.length ? selectedTags.join("|") : "all"}
+            cards={filteredCards}
+            onOpenCard={setSelectedCard}
+            isModalOpen={Boolean(selectedCard)}
+          />
         )}
       </div>
 
+      <FilterDock
+        isOpen={isFilterOpen}
+        selectedTags={selectedTags}
+        onToggleOpen={() => setIsFilterOpen((current) => !current)}
+        onToggleTag={handleToggleTag}
+      />
       {selectedCard ? <CardModal card={selectedCard} onClose={() => setSelectedCard(null)} /> : null}
     </div>
   );

@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
+import { CARD_TAG_MAP } from "../lib/cardTags";
 import type { CardData } from "../types";
 import { Viewer3D } from "./Viewer3D";
 
@@ -73,6 +75,32 @@ export function CardModal({ card, onClose }: CardModalProps) {
         </button>
         <Viewer3D card={card} />
         <section className="modal-copy">
+          <div className="modal-meta">
+            <p className="modal-title">{card.label}</p>
+            <div className="modal-tags">
+              {card.tags.map((tagId) => {
+                const tag = CARD_TAG_MAP.get(tagId);
+                if (!tag) {
+                  return null;
+                }
+
+                return (
+                  <span
+                    key={tag.id}
+                    className="modal-tag"
+                    style={
+                      {
+                        "--tag-color": tag.color,
+                        "--tag-text-color": tag.textColor,
+                      } as CSSProperties
+                    }
+                  >
+                    {tag.label}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
           <p className="modal-description">{card.description}</p>
         </section>
       </div>
