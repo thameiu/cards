@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { createLayeredCard, getCardSize } from "../lib/threeCard";
 import { getImageSourceCandidates } from "../lib/imageSources";
 import type { CardData } from "../types";
@@ -176,6 +177,7 @@ async function loadTextureWithFallback(loader: THREE.TextureLoader, src: string)
 export function Viewer3D({ card, isFullSize = false }: Viewer3DProps) {
   const mountRef = useRef<HTMLDivElement | null>(null);
   const [isReady, setIsReady] = useState(false);
+  const isErrorEasterEgg = card.id === "__error__";
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -207,7 +209,8 @@ export function Viewer3D({ card, isFullSize = false }: Viewer3DProps) {
     rimLight.position.set(-6, -2, -6);
     scene.add(rimLight);
 
-    const loader = new THREE.TextureLoader();
+    const textureLoader = new THREE.TextureLoader();
+    const gltfLoader = new GLTFLoader();
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableZoom = false;
     controls.enablePan = false;
@@ -246,7 +249,7 @@ export function Viewer3D({ card, isFullSize = false }: Viewer3DProps) {
       camera.aspect = clientWidth / clientHeight;
       const targetYOffset = isFullSize ? -cardSize.height * 0.035 : 0;
       positionCamera(camera, cardSize, cardCenter, {
-        fitMultiplier: isFullSize ? 1.2 : 1.12,
+        fitMultiplier: isErrorEasterEgg ? (isFullSize ? 0.34 : 0.28) : isFullSize ? 1.2 : 1.12,
         targetYOffset,
       });
       controls.target.set(cardCenter.x, cardCenter.y + targetYOffset, cardCenter.z);
@@ -265,64 +268,103 @@ export function Viewer3D({ card, isFullSize = false }: Viewer3DProps) {
       renderer.render(scene, camera);
     };
 
-    Promise.all([
-      loadTextureWithFallback(loader, card.front),
-      card.back ? loadTextureWithFallback(loader, card.back).catch(() => null) : Promise.resolve(null),
-    ])
-      .then(([frontTexture, backTexture]) => {
+    const loadCardModel = async () => {
+      if (card.front.toLowerCase().endsWith(".glb")) {
+        const gltf = await gltfLoader.loadAsync(card.front);
         if (disposed) {
-          frontTexture.dispose();
-          backTexture?.dispose();
           return;
         }
 
-        const frontImage = frontTexture.image as TexImageSource | ImageBitmap;
-        const { width: sourceWidth, height: sourceHeight } = getImageDimensions(frontImage);
-        const aspectRatio = sourceWidth / Math.max(sourceHeight, 1);
-        const canvasWidth = Math.min(sourceWidth, 2048);
-        const canvasHeight = Math.max(Math.round(canvasWidth / Math.max(aspectRatio, 0.01)), 1);
-
-        const composedFrontTexture = createFaceTexture(frontTexture, canvasWidth, canvasHeight);
-        const composedBackTexture = createBackTexture(backTexture, canvasWidth, canvasHeight);
-        const frontMaskTexture = createMaskTexture(frontTexture, canvasWidth, canvasHeight);
-        const backMaskTexture = createMaskTexture(frontTexture, canvasWidth, canvasHeight, true);
-
-        for (const texture of [
-          composedFrontTexture,
-          composedBackTexture,
-          frontMaskTexture,
-          backMaskTexture,
-        ]) {
-          texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
-        }
-
-        cardGroup = createLayeredCard(
-          composedFrontTexture,
-          composedBackTexture,
-          frontMaskTexture,
-          backMaskTexture,
-          { aspectRatio }
-        );
-        cardSize = getCardSize(aspectRatio);
-        const boundingBox = new THREE.Box3().setFromObject(cardGroup);
+        const model = gltf.scene;
+        const boundingBox = new THREE.Box3().setFromObject(model);
         const boxSize = boundingBox.getSize(new THREE.Vector3());
         const boxCenter = boundingBox.getCenter(new THREE.Vector3());
+        const longestSide = Math.max(boxSize.x, boxSize.y, boxSize.z, 0.0001);
+        const scale = 7.5 / longestSide;
+
+        model.scale.setScalar(scale);
+        model.position.sub(boxCenter.multiplyScalar(scale));
+
+        const scaledBox = new THREE.Box3().setFromObject(model);
+        const scaledSize = scaledBox.getSize(new THREE.Vector3());
+        const scaledCenter = scaledBox.getCenter(new THREE.Vector3());
         cardSize = {
-          width: boxSize.x,
-          height: boxSize.y,
-          depth: boxSize.z,
+          width: scaledSize.x,
+          height: scaledSize.y,
+          depth: scaledSize.z,
         };
-        cardCenter.copy(boxCenter);
+        cardCenter.copy(scaledCenter);
+        cardGroup = new THREE.Group();
+        cardGroup.add(model);
         scene.add(cardGroup);
         updateSize();
         setIsReady(true);
+        animate();
+        return;
+      }
 
+      const [frontTexture, backTexture] = await Promise.all([
+        loadTextureWithFallback(textureLoader, card.front),
+        card.back
+          ? loadTextureWithFallback(textureLoader, card.back).catch(() => null)
+          : Promise.resolve(null),
+      ]);
+
+      if (disposed) {
         frontTexture.dispose();
         backTexture?.dispose();
-        animate();
-      })
+        return;
+      }
+
+      const frontImage = frontTexture.image as TexImageSource | ImageBitmap;
+      const { width: sourceWidth, height: sourceHeight } = getImageDimensions(frontImage);
+      const aspectRatio = sourceWidth / Math.max(sourceHeight, 1);
+      const canvasWidth = Math.min(sourceWidth, 2048);
+      const canvasHeight = Math.max(Math.round(canvasWidth / Math.max(aspectRatio, 0.01)), 1);
+
+      const composedFrontTexture = createFaceTexture(frontTexture, canvasWidth, canvasHeight);
+      const composedBackTexture = createBackTexture(backTexture, canvasWidth, canvasHeight);
+      const frontMaskTexture = createMaskTexture(frontTexture, canvasWidth, canvasHeight);
+      const backMaskTexture = createMaskTexture(frontTexture, canvasWidth, canvasHeight, true);
+
+      for (const texture of [
+        composedFrontTexture,
+        composedBackTexture,
+        frontMaskTexture,
+        backMaskTexture,
+      ]) {
+        texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      }
+
+      cardGroup = createLayeredCard(
+        composedFrontTexture,
+        composedBackTexture,
+        frontMaskTexture,
+        backMaskTexture,
+        { aspectRatio }
+      );
+      cardSize = getCardSize(aspectRatio);
+      const boundingBox = new THREE.Box3().setFromObject(cardGroup);
+      const boxSize = boundingBox.getSize(new THREE.Vector3());
+      const boxCenter = boundingBox.getCenter(new THREE.Vector3());
+      cardSize = {
+        width: boxSize.x,
+        height: boxSize.y,
+        depth: boxSize.z,
+      };
+      cardCenter.copy(boxCenter);
+      scene.add(cardGroup);
+      updateSize();
+      setIsReady(true);
+
+      frontTexture.dispose();
+      backTexture?.dispose();
+      animate();
+    };
+
+    loadCardModel()
       .catch((error) => {
-        console.error("Failed to load card textures", error);
+        console.error("Failed to load card asset", error);
         setIsReady(true);
       });
 

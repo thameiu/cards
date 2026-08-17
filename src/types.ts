@@ -6,7 +6,8 @@ export type CardTag =
   | "transport"
   | "art"
   | "fashion"
-  | "miscellaneous";
+  | "miscellaneous"
+  | "secret";
 
 export type CardData = {
   id: string;

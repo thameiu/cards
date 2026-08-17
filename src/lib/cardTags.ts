@@ -18,4 +18,13 @@ export const CARD_TAGS: CardTagDefinition[] = [
   { id: "miscellaneous", label: "miscellaneous", color: "#19001A", textColor: "#fff" },
 ];
 
-export const CARD_TAG_MAP = new Map(CARD_TAGS.map((tag) => [tag.id, tag]));
+export const SECRET_CARD_TAG: CardTagDefinition = {
+  id: "secret",
+  label: "secret",
+  color: "#FF0000",
+  textColor: "#fff",
+};
+
+export const CARD_TAG_MAP = new Map(
+  [...CARD_TAGS, SECRET_CARD_TAG].map((tag) => [tag.id, tag])
+);

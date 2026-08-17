@@ -16,10 +16,21 @@ const FADE_DURATION_MS = 220;
 
 type OpenModal = {
   id: number;
+  sourceCardId: string;
   card: CardData;
   x: number;
   y: number;
   zIndex: number;
+};
+
+const ERROR_MODAL_CHANCE = 0.01;
+const ERROR_MODAL_CARD: CardData = {
+  id: "__error__",
+  label: "Error",
+  description: "Error",
+  front: "/assets/error.glb",
+  back: null,
+  tags: ["secret"],
 };
 
 function getInitialViewMode(): ViewMode {
@@ -179,7 +190,7 @@ export default function App() {
 
   useEffect(() => {
     const filteredIds = new Set(filteredCards.map((card) => card.id));
-    setOpenModals((current) => current.filter((modal) => filteredIds.has(modal.card.id)));
+    setOpenModals((current) => current.filter((modal) => filteredIds.has(modal.sourceCardId)));
   }, [filteredCards]);
 
   useEffect(() => {
@@ -235,11 +246,13 @@ export default function App() {
   };
 
   const handleOpenCard = (card: CardData) => {
-    const existingModal = openModals.find((modal) => modal.card.id === card.id);
+    const existingModal = openModals.find((modal) => modal.sourceCardId === card.id);
     if (existingModal) {
       handleFocusModal(existingModal.id);
       return;
     }
+
+    const modalCard = Math.random() < ERROR_MODAL_CHANCE ? ERROR_MODAL_CARD : card;
 
     const modalId = nextModalId;
     const modalZIndex = nextModalZIndex;
@@ -253,7 +266,8 @@ export default function App() {
       ...current,
       {
         id: modalId,
-        card,
+        sourceCardId: card.id,
+        card: modalCard,
         x: isMobile ? 12 + offsetIndex * 10 : 48 + offsetIndex * 26,
         y: isMobile ? 136 + offsetIndex * 10 : 116 + offsetIndex * 24,
         zIndex: modalZIndex,
