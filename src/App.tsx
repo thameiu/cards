@@ -3,6 +3,7 @@ import { cardList } from "./CardList";
 import { AboutPage } from "./components/AboutPage";
 import { CardModal } from "./components/CardModal";
 import { InfiniteGallery } from "./components/InfiniteGallery";
+import { InitialLoader } from "./components/InitialLoader";
 import { Loader } from "./components/Loader";
 import { RetroHeader } from "./components/RetroHeader";
 import { ScrollableGallery } from "./components/ScrollableGallery";
@@ -10,6 +11,7 @@ import { getImageSourceCandidates } from "./lib/imageSources";
 import type { CardData, CardTag, ViewMode } from "./types";
 
 const STORAGE_KEY = "cards-view-mode";
+const INITIAL_LOADER_STORAGE_KEY = "initialLoaderDone";
 const FADE_DURATION_MS = 220;
 
 type OpenModal = {
@@ -31,6 +33,14 @@ function getInitialViewMode(): ViewMode {
   }
 
   return "infinite";
+}
+
+function getInitialLoaderDone() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return window.localStorage.getItem(INITIAL_LOADER_STORAGE_KEY) === "true";
 }
 
 function preloadImage(src: string) {
@@ -65,6 +75,9 @@ export default function App() {
   const [displayMode, setDisplayMode] = useState<ViewMode>(getInitialViewMode);
   const [isViewFading, setIsViewFading] = useState(false);
   const [areGalleryImagesReady, setAreGalleryImagesReady] = useState(false);
+  const [areSiteAssetsReady, setAreSiteAssetsReady] = useState(false);
+  const [siteLoadProgress, setSiteLoadProgress] = useState(0);
+  const [isInitialLoaderDone, setIsInitialLoaderDone] = useState(getInitialLoaderDone);
   const [selectedTags, setSelectedTags] = useState<CardTag[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isFilterHovered, setIsFilterHovered] = useState(false);
@@ -73,6 +86,19 @@ export default function App() {
   const viewFadeTimeoutRef = useRef<number | null>(null);
   const galleryImageSources = useMemo(
     () => Array.from(new Set(cardList.map((card) => card.front))),
+    []
+  );
+  const siteImageSources = useMemo(
+    () =>
+      Array.from(
+        new Set([
+          ...cardList.flatMap((card) => [card.front, card.back].filter(Boolean) as string[]),
+          "/assets/background.jpg",
+          "/assets/pileofcards.png",
+          "/assets/thameiu_88x31.webp",
+          "/assets/myself.png",
+        ])
+      ),
     []
   );
   const filteredCards = useMemo(() => {
@@ -91,17 +117,57 @@ export default function App() {
 
   useEffect(() => {
     let cancelled = false;
+    let loadedSiteImageCount = 0;
+    let loadedGalleryImageCount = 0;
+    const gallerySourceSet = new Set(galleryImageSources);
 
-    Promise.all(galleryImageSources.map((src) => preloadImage(src))).then(() => {
-      if (!cancelled) {
-        setAreGalleryImagesReady(true);
+    if (!siteImageSources.length) {
+      setSiteLoadProgress(1);
+      setAreGalleryImagesReady(true);
+      setAreSiteAssetsReady(true);
+      if (!isInitialLoaderDone && typeof window !== "undefined") {
+        window.localStorage.setItem(INITIAL_LOADER_STORAGE_KEY, "true");
+        setIsInitialLoaderDone(true);
+      }
+      return undefined;
+    }
+
+    Promise.all(
+      siteImageSources.map(async (src) => {
+        await preloadImage(src);
+        if (cancelled) {
+          return;
+        }
+
+        loadedSiteImageCount += 1;
+        setSiteLoadProgress(loadedSiteImageCount / siteImageSources.length);
+
+        if (gallerySourceSet.delete(src)) {
+          loadedGalleryImageCount += 1;
+          if (loadedGalleryImageCount >= galleryImageSources.length) {
+            setAreGalleryImagesReady(true);
+          }
+        }
+      })
+    ).then(() => {
+      if (cancelled) {
+        return;
+      }
+
+      setSiteLoadProgress(1);
+      setAreGalleryImagesReady(true);
+      setAreSiteAssetsReady(true);
+
+      if (!isInitialLoaderDone && typeof window !== "undefined") {
+        window.localStorage.setItem(INITIAL_LOADER_STORAGE_KEY, "true");
+        setIsInitialLoaderDone(true);
       }
     });
 
     return () => {
       cancelled = true;
     };
-  }, [galleryImageSources]);
+  }, [galleryImageSources, siteImageSources]);
 
   useEffect(() => {
     return () => {
@@ -213,6 +279,11 @@ export default function App() {
 
   const shouldShowGalleryLoader = !areGalleryImagesReady && displayMode !== "about";
   const shouldRenderGalleryContent = areGalleryImagesReady || displayMode === "about";
+  const shouldShowInitialLoader = !isInitialLoaderDone && !areSiteAssetsReady;
+
+  if (shouldShowInitialLoader) {
+    return <InitialLoader progress={siteLoadProgress} />;
+  }
 
   return (
     <div className="app-shell">
