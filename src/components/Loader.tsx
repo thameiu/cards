@@ -8,8 +8,12 @@ export function Loader({ className = "" }: LoaderProps) {
       <div className="loader-popup">
         <div className="loader-body">
           <p className="loader-label">
-            loading
-            <span className="loader-dots">...</span>
+            <span className="loader-text">loading</span>
+            <span className="loader-dots">
+              <span className="loader-dot">.</span>
+              <span className="loader-dot">.</span>
+              <span className="loader-dot">.</span>
+            </span>
           </p>
         </div>
       </div>

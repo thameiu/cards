@@ -210,6 +210,7 @@ img,
   display: grid;
   place-items: center;
   z-index: 1;
+  background: linear-gradient(180deg, rgba(255, 250, 254, 0.95), rgba(250, 249, 250, 1));
 }
 
 .filter-dock {
@@ -866,6 +867,8 @@ img,
 
 .loader-label {
   margin: 0;
+  display: inline-flex;
+  align-items: baseline;
   color: var(--text);
   font-size: 0.8rem;
   line-height: 1;
@@ -874,21 +877,41 @@ img,
   text-align: center;
 }
 
-.loader-dots {
+.loader-text {
   display: inline-block;
-  overflow: hidden;
-  vertical-align: bottom;
-  width: 3ch;
-  animation: loader-dots 1s steps(4, end) infinite;
 }
 
-@keyframes loader-dots {
-  from {
-    width: 0;
+.loader-dots {
+  display: inline-grid;
+  grid-auto-flow: column;
+  justify-content: start;
+  width: 1.8ch;
+  margin-left: 0.08em;
+  vertical-align: bottom;
+}
+
+.loader-dot {
+  opacity: 0;
+  animation: loader-dot-blink 1.2s steps(1, end) infinite;
+}
+
+.loader-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loader-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes loader-dot-blink {
+  0%,
+  20% {
+    opacity: 0;
   }
 
-  to {
-    width: 3ch;
+  25%,
+  100% {
+    opacity: 1;
   }
 }
 

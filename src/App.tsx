@@ -212,6 +212,7 @@ export default function App() {
   };
 
   const shouldShowGalleryLoader = !areGalleryImagesReady && displayMode !== "about";
+  const shouldRenderGalleryContent = areGalleryImagesReady || displayMode === "about";
 
   return (
     <div className="app-shell">
@@ -227,24 +228,26 @@ export default function App() {
         />
 
         <div className="gallery-shell">
-          <div className={`gallery-content ${isViewFading ? "is-fading" : "is-visible"}`}>
-            {displayMode === "about" ? (
-              <AboutPage cards={filteredCards} totalCardCount={cardList.length} />
-            ) : displayMode === "scroll" ? (
-              <ScrollableGallery
-                cards={filteredCards}
-                onOpenCard={handleOpenCard}
-                isTooltipDisabled={isFilterHovered}
-              />
-            ) : (
-              <InfiniteGallery
-                key={selectedTags.length ? selectedTags.join("|") : "all"}
-                cards={filteredCards}
-                onOpenCard={handleOpenCard}
-                isTooltipDisabled={isFilterHovered}
-              />
-            )}
-          </div>
+          {shouldRenderGalleryContent ? (
+            <div className={`gallery-content ${isViewFading ? "is-fading" : "is-visible"}`}>
+              {displayMode === "about" ? (
+                <AboutPage cards={filteredCards} totalCardCount={cardList.length} />
+              ) : displayMode === "scroll" ? (
+                <ScrollableGallery
+                  cards={filteredCards}
+                  onOpenCard={handleOpenCard}
+                  isTooltipDisabled={isFilterHovered}
+                />
+              ) : (
+                <InfiniteGallery
+                  key={selectedTags.length ? selectedTags.join("|") : "all"}
+                  cards={filteredCards}
+                  onOpenCard={handleOpenCard}
+                  isTooltipDisabled={isFilterHovered}
+                />
+              )}
+            </div>
+          ) : null}
           {shouldShowGalleryLoader ? (
             <div className="gallery-loader-screen">
               <Loader />
