@@ -101,10 +101,17 @@ export const ImageCardThumb = memo(function ImageCardThumb({
       const rect = frame.getBoundingClientRect();
       const cursor = isCoarsePointer ? null : getCursorState();
       const tooltip = tooltipRef.current;
+      const topElement =
+        cursor !== null ? document.elementFromPoint(cursor.x, cursor.y) : null;
+      const isOccluded =
+        topElement instanceof Element &&
+        !button.contains(topElement) &&
+        !topElement.closest(`[data-card-id="${card.id}"]`);
       const nextIsHovered =
         !isTooltipDisabled &&
         !isCoarsePointer &&
         cursor !== null &&
+        !isOccluded &&
         cursor.x >= buttonRect.left &&
         cursor.x <= buttonRect.right &&
         cursor.y >= buttonRect.top &&

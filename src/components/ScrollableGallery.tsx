@@ -4,10 +4,14 @@ import { ImageCardThumb } from "./ImageCardThumb";
 type ScrollableGalleryProps = {
   cards: CardData[];
   onOpenCard: (card: CardData) => void;
-  isModalOpen?: boolean;
+  isTooltipDisabled?: boolean;
 };
 
-export function ScrollableGallery({ cards, onOpenCard, isModalOpen = false }: ScrollableGalleryProps) {
+export function ScrollableGallery({
+  cards,
+  onOpenCard,
+  isTooltipDisabled = false,
+}: ScrollableGalleryProps) {
   return (
     <main className="cards-scroll">
       <div className="cards-grid">
@@ -16,7 +20,7 @@ export function ScrollableGallery({ cards, onOpenCard, isModalOpen = false }: Sc
             <ImageCardThumb
               card={card}
               onClick={() => onOpenCard(card)}
-              isTooltipDisabled={isModalOpen}
+              isTooltipDisabled={isTooltipDisabled}
             />
           </div>
         ))}

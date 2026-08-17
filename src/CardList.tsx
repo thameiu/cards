@@ -57,6 +57,7 @@ const CARD_DEFINITIONS: CardDefinition[] = [
   { id: "uplandsroast", label: "Uplands Roast", description: "small cafe in edinburgh, they make the best hot chocolate i ever tried, with toasted marshmallows, cinnamon, etc.", tags: ["food"] },
   { id: "viviennewestwood", label: "Vivienne Westwood", description: "found in the bag of my vivienne westwood armor ring, which i bought in london.", tags: ["fashion", "shop"] },
   { id: "yojisu", label: "Yojisu", description: "japanese restaurant around aix-en-provence.", tags: ["food"] },
+    // { id: "cards", label: "card", description: "lorem izgeg dolor zgeg", tags: ["miscellaneous"] },
 ];
 
 export const cardList: CardData[] = CARD_DEFINITIONS.map(({ id, label, description, tags }) => ({

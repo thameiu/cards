@@ -8,6 +8,7 @@ import { Loader } from "./Loader";
 
 type Viewer3DProps = {
   card: CardData;
+  isFullSize?: boolean;
 };
 
 function getImageDimensions(image: TexImageSource | ImageBitmap) {
@@ -135,14 +136,26 @@ function createMaskTexture(
   return texture;
 }
 
-function positionCamera(camera: THREE.PerspectiveCamera, width: number, height: number, depth: number) {
-  const halfFov = THREE.MathUtils.degToRad(camera.fov / 2);
-  const fitHeightDistance = height / (2 * Math.tan(halfFov));
-  const fitWidthDistance = (width / camera.aspect) / (2 * Math.tan(halfFov));
-  const distance = Math.max(fitHeightDistance, fitWidthDistance) * 1.18 + depth * 20;
+function positionCamera(
+  camera: THREE.PerspectiveCamera,
+  size: { width: number; height: number; depth: number },
+  center = new THREE.Vector3(0, 0, 0),
+  options?: {
+    fitMultiplier?: number;
+    targetYOffset?: number;
+  }
+) {
+  const halfVerticalFov = THREE.MathUtils.degToRad(camera.fov / 2);
+  const halfHorizontalFov = Math.atan(Math.tan(halfVerticalFov) * camera.aspect) || 0.0001;
+  const fitHeightDistance = (size.height / 2) / Math.max(Math.tan(halfVerticalFov), 0.0001);
+  const fitWidthDistance = (size.width / 2) / Math.max(Math.tan(halfHorizontalFov), 0.0001);
+  const distance = Math.max(fitHeightDistance, fitWidthDistance) + size.depth * 8;
+  const fitMultiplier = options?.fitMultiplier ?? 1.08;
+  const targetYOffset = options?.targetYOffset ?? 0;
+  const target = new THREE.Vector3(center.x, center.y + targetYOffset, center.z);
 
-  camera.position.set(0, 0, distance);
-  camera.lookAt(0, 0, 0);
+  camera.position.set(center.x, center.y, center.z + distance * fitMultiplier);
+  camera.lookAt(target);
   camera.updateProjectionMatrix();
 }
 
@@ -160,7 +173,7 @@ async function loadTextureWithFallback(loader: THREE.TextureLoader, src: string)
   throw new Error(`Failed to load texture for ${src}`);
 }
 
-export function Viewer3D({ card }: Viewer3DProps) {
+export function Viewer3D({ card, isFullSize = false }: Viewer3DProps) {
   const mountRef = useRef<HTMLDivElement | null>(null);
   const [isReady, setIsReady] = useState(false);
 
@@ -175,12 +188,12 @@ export function Viewer3D({ card }: Viewer3DProps) {
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.setClearColor(0xffffff, 1);
+    renderer.setClearColor(0xffffff, 0);
     renderer.domElement.className = "viewer-canvas";
     mount.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xffffff);
+    scene.background = null;
     const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
     camera.position.set(0, 0, 8);
 
@@ -203,6 +216,7 @@ export function Viewer3D({ card }: Viewer3DProps) {
     controls.dampingFactor = 0.08;
     controls.minPolarAngle = 0.8;
     controls.maxPolarAngle = 2.34;
+    controls.target.set(0, 0, 0);
     let isInteracting = false;
 
     const handleInteractionStart = () => {
@@ -220,6 +234,7 @@ export function Viewer3D({ card }: Viewer3DProps) {
     let disposed = false;
     let cardGroup: THREE.Group | undefined;
     let cardSize = getCardSize(1);
+    const cardCenter = new THREE.Vector3(0, 0, 0);
 
     const updateSize = () => {
       const { clientWidth, clientHeight } = mount;
@@ -229,7 +244,13 @@ export function Viewer3D({ card }: Viewer3DProps) {
 
       renderer.setSize(clientWidth, clientHeight, false);
       camera.aspect = clientWidth / clientHeight;
-      positionCamera(camera, cardSize.width, cardSize.height, cardSize.depth);
+      const targetYOffset = isFullSize ? -cardSize.height * 0.035 : 0;
+      positionCamera(camera, cardSize, cardCenter, {
+        fitMultiplier: isFullSize ? 1.2 : 1.12,
+        targetYOffset,
+      });
+      controls.target.set(cardCenter.x, cardCenter.y + targetYOffset, cardCenter.z);
+      controls.update();
     };
 
     const animate = () => {
@@ -283,6 +304,15 @@ export function Viewer3D({ card }: Viewer3DProps) {
           { aspectRatio }
         );
         cardSize = getCardSize(aspectRatio);
+        const boundingBox = new THREE.Box3().setFromObject(cardGroup);
+        const boxSize = boundingBox.getSize(new THREE.Vector3());
+        const boxCenter = boundingBox.getCenter(new THREE.Vector3());
+        cardSize = {
+          width: boxSize.x,
+          height: boxSize.y,
+          depth: boxSize.z,
+        };
+        cardCenter.copy(boxCenter);
         scene.add(cardGroup);
         updateSize();
         setIsReady(true);
@@ -329,7 +359,7 @@ export function Viewer3D({ card }: Viewer3DProps) {
       renderer.dispose();
       mount.innerHTML = "";
     };
-  }, [card]);
+  }, [card, isFullSize]);
 
   return (
     <div className={`viewer-shell${isReady ? " is-ready" : " is-loading"}`}>

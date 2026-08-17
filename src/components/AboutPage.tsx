@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
+import { getImageSourceCandidates } from "../lib/imageSources";
 import type { CardData } from "../types";
 import { OptimizedImage } from "./OptimizedImage";
 
@@ -16,8 +17,64 @@ type AboutPageProps = {
   totalCardCount: number;
 };
 
+type GhostImageProps = {
+  ghostCard: GhostCard;
+};
+
+const GHOST_LONG_SIDE = 120;
+
+function AboutGhostImage({ ghostCard }: GhostImageProps) {
+  const [dimensions, setDimensions] = useState(() => ({
+    width: GHOST_LONG_SIDE,
+    height: GHOST_LONG_SIDE / 1.54,
+  }));
+
+  return (
+    <OptimizedImage
+      className="about-ghost-card"
+      src={ghostCard.src}
+      alt=""
+      style={
+        {
+          "--ghost-x": `${ghostCard.x}px`,
+          "--ghost-y": `${ghostCard.y}px`,
+          "--ghost-rotation": `${ghostCard.rotation}deg`,
+          "--ghost-width": `${dimensions.width}px`,
+          "--ghost-height": `${dimensions.height}px`,
+        } as CSSProperties
+      }
+      onLoad={(event) => {
+        const { naturalWidth, naturalHeight } = event.currentTarget;
+        if (!naturalWidth || !naturalHeight) {
+          return;
+        }
+
+        if (naturalWidth >= naturalHeight) {
+          setDimensions({
+            width: GHOST_LONG_SIDE,
+            height: (GHOST_LONG_SIDE * naturalHeight) / naturalWidth,
+          });
+          return;
+        }
+
+        setDimensions({
+          width: (GHOST_LONG_SIDE * naturalWidth) / naturalHeight,
+          height: GHOST_LONG_SIDE,
+        });
+      }}
+    />
+  );
+}
+
 export function AboutPage({ cards, totalCardCount }: AboutPageProps) {
   const [ghostCards, setGhostCards] = useState<GhostCard[]>([]);
+  const [ghostBounds, setGhostBounds] = useState<{
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const mainRef = useRef<HTMLElement | null>(null);
   const isCoarsePointer =
     typeof window !== "undefined" &&
     typeof window.matchMedia === "function" &&
@@ -25,6 +82,7 @@ export function AboutPage({ cards, totalCardCount }: AboutPageProps) {
   const [isTrailEnabled, setIsTrailEnabled] = useState(!isCoarsePointer);
   const ghostIdRef = useRef(0);
   const lastSpawnRef = useRef(0);
+  const backAvailabilityRef = useRef(new Map<string, boolean>());
   const pointerDownRef = useRef<{
     x: number;
     y: number;
@@ -46,8 +104,75 @@ export function AboutPage({ cards, totalCardCount }: AboutPageProps) {
     };
   }, []);
 
+  useEffect(() => {
+    const main = mainRef.current;
+    if (!main) {
+      return undefined;
+    }
+
+    const updateBounds = () => {
+      const rect = main.getBoundingClientRect();
+      setGhostBounds({
+        left: rect.left,
+        top: rect.top,
+        width: Math.max(rect.width - 18, 0),
+        height: rect.height,
+      });
+    };
+
+    const resizeObserver = new ResizeObserver(updateBounds);
+    resizeObserver.observe(main);
+    window.addEventListener("resize", updateBounds);
+    updateBounds();
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", updateBounds);
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const verifyImageExists = async (src: string) => {
+      const candidates = getImageSourceCandidates(src);
+
+      for (const candidate of candidates) {
+        const exists = await new Promise<boolean>((resolve) => {
+          const image = new Image();
+          image.onload = () => resolve(true);
+          image.onerror = () => resolve(false);
+          image.src = candidate;
+        });
+
+        if (exists) {
+          return true;
+        }
+      }
+
+      return false;
+    };
+
+    cards.forEach((card) => {
+      if (!card.back || backAvailabilityRef.current.has(card.back)) {
+        return;
+      }
+
+      verifyImageExists(card.back).then((exists) => {
+        if (!cancelled) {
+          backAvailabilityRef.current.set(card.back!, exists);
+        }
+      });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [cards]);
+
   const spawnGhostCard = (clientX: number, clientY: number) => {
-    if (isCoarsePointer) {
+    const bounds = ghostBounds;
+    if (isCoarsePointer || !bounds) {
       return;
     }
 
@@ -62,11 +187,17 @@ export function AboutPage({ cards, totalCardCount }: AboutPageProps) {
 
     lastSpawnRef.current = now;
     const card = cards[Math.floor(Math.random() * cards.length)];
-    const src = Math.random() > 0.5 && card.back ? card.back : card.front;
+    const canUseBack = Boolean(card.back && backAvailabilityRef.current.get(card.back) === true);
+    const src = Math.random() > 0.5 && canUseBack && card.back ? card.back : card.front;
     const id = ghostIdRef.current++;
-    const rotation = (Math.random() - 0.5) * 26;
+    const rotation = 0;
+    const x = clientX - bounds.left;
+    const y = clientY - bounds.top;
 
-    setGhostCards((current) => [...current, { id, src, x: clientX, y: clientY, rotation }]);
+    setGhostCards((current) => [
+      ...current,
+      { id, src, x, y, rotation },
+    ]);
 
     window.setTimeout(() => {
       setGhostCards((current) => current.filter((ghostCard) => ghostCard.id !== id));
@@ -75,6 +206,7 @@ export function AboutPage({ cards, totalCardCount }: AboutPageProps) {
 
   return (
     <main
+      ref={mainRef}
       className="about-page"
       onPointerDown={(event) => {
         pointerDownRef.current = {
@@ -121,23 +253,25 @@ export function AboutPage({ cards, totalCardCount }: AboutPageProps) {
         pointerDownRef.current = null;
       }}
     >
-      <div className="about-ghost-layer" aria-hidden="true">
+      <div
+        className="about-ghost-layer"
+        aria-hidden="true"
+        style={
+          ghostBounds
+            ? ({
+                left: `${ghostBounds.left}px`,
+                top: `${ghostBounds.top}px`,
+                width: `${ghostBounds.width}px`,
+                height: `${ghostBounds.height}px`,
+              } as CSSProperties)
+            : undefined
+        }
+      >
         {ghostCards.map((ghostCard) => (
-          <OptimizedImage
-            key={ghostCard.id}
-            className="about-ghost-card"
-            src={ghostCard.src}
-            alt=""
-            style={
-              {
-                "--ghost-x": `${ghostCard.x}px`,
-                "--ghost-y": `${ghostCard.y}px`,
-                "--ghost-rotation": `${ghostCard.rotation}deg`,
-              } as CSSProperties
-            }
-          />
+          <AboutGhostImage key={ghostCard.id} ghostCard={ghostCard} />
         ))}
       </div>
+      <div className="about-hero" aria-hidden="true" />
       <div className="about-copy">
         <p>
           Hello,{" "}
@@ -213,7 +347,8 @@ export function AboutPage({ cards, totalCardCount }: AboutPageProps) {
             repo
           </a>{" "}
           on GitHub. FYI, I will NOT be coding an
-          automation to crop and edit the cards correctly, so good luck.
+          automation to crop and edit the cards correctly, so good luck.{" "}
+          <OptimizedImage src="assets/myself.png" alt="" className="about-inline-self" />
         </p>
       </div>
     </main>

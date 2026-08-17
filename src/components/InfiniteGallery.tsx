@@ -17,7 +17,7 @@ function wrap(value: number, size: number) {
 type InfiniteGalleryProps = {
   cards: CardData[];
   onOpenCard: (card: CardData) => void;
-  isModalOpen?: boolean;
+  isTooltipDisabled?: boolean;
 };
 
 const PRELOAD_COLUMNS = 2;
@@ -35,7 +35,11 @@ const DESKTOP_GRID_GAP_Y = 34;
 const MOBILE_GRID_GAP_X = 20;
 const MOBILE_GRID_GAP_Y = 24;
 
-export function InfiniteGallery({ cards, onOpenCard, isModalOpen = false }: InfiniteGalleryProps) {
+export function InfiniteGallery({
+  cards,
+  onOpenCard,
+  isTooltipDisabled = false,
+}: InfiniteGalleryProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [gridWindow, setGridWindow] = useState({ centerCol: 2, centerRow: 2 });
   const metrics = useViewportMetrics();
@@ -372,7 +376,7 @@ export function InfiniteGallery({ cards, onOpenCard, isModalOpen = false }: Infi
         ? Math.hypot(event.clientX - dragState.pointerStartX, event.clientY - dragState.pointerStartY)
         : Number.POSITIVE_INFINITY;
 
-      if (dragState?.cardId && !dragState.moved && tapDistance <= tapThreshold && !isModalOpen) {
+      if (dragState?.cardId && !dragState.moved && tapDistance <= tapThreshold) {
         const card = cardMap.get(dragState.cardId);
         if (card) {
           onOpenCard(card);
@@ -396,7 +400,7 @@ export function InfiniteGallery({ cards, onOpenCard, isModalOpen = false }: Infi
       window.removeEventListener("pointerup", onPointerUp);
       window.removeEventListener("pointercancel", onPointerUp);
     };
-  }, [cardMap, isCoarsePointer, isModalOpen, onOpenCard]);
+  }, [cardMap, isCoarsePointer, onOpenCard]);
 
   const scaledStepX = stepX * scaleRef.current;
   const scaledStepY = stepY * scaleRef.current;
@@ -500,7 +504,7 @@ export function InfiniteGallery({ cards, onOpenCard, isModalOpen = false }: Infi
               card={tile.card}
               disableNativePress
               limitEffectsToViewport
-              isTooltipDisabled={isModalOpen}
+              isTooltipDisabled={isTooltipDisabled}
             />
           </div>
         ))}
