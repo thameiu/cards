@@ -278,8 +278,10 @@ export function AboutPage({ cards, totalCardCount }: AboutPageProps) {
           <span className="latex-frac" aria-label="mathieu over thameiu">
             <span className="latex-frac-num">thameiu</span>
             <span className="latex-frac-den">mathieu</span>
-          </span>{" "}
-          here.
+          </span>{" "}                  
+          here.{" "} {" "} 
+          <OptimizedImage src="assets/myself.png" alt="" className="about-inline-self" />
+
         </p>
         <p>
           For several years, I’ve had a sort of passion for collecting cards. Not TCGs or other
@@ -333,9 +335,9 @@ export function AboutPage({ cards, totalCardCount }: AboutPageProps) {
               aria-hidden="true"
             />
           </a>{" "}
-          if you want.
+            if you want.
         </p>
-
+{/*
         <p>
           This project is open-source. If you want to create your own binder, you can clone the{" "}
           <a
@@ -348,8 +350,7 @@ export function AboutPage({ cards, totalCardCount }: AboutPageProps) {
           </a>{" "}
           on GitHub. FYI, I will NOT be coding an
           automation to crop and edit the cards correctly, so good luck.{" "}
-          <OptimizedImage src="assets/myself.png" alt="" className="about-inline-self" />
-        </p>
+        </p>*/}
       </div>
     </main>
   );
