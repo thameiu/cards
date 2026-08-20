@@ -493,7 +493,6 @@ export function InfiniteGallery({
             key={tile.key}
             className="infinite-cell"
             style={{
-              "--thumb-long-side": `${baseCellSize}px`,
               left: `${tile.col * stepX}px`,
               top: `${tile.row * stepY}px`,
               width: `${baseCellSize}px`,
@@ -502,6 +501,7 @@ export function InfiniteGallery({
           >
             <ImageCardThumb
               card={tile.card}
+              longSide={baseCellSize}
               disableNativePress
               limitEffectsToViewport
               isTooltipDisabled={isTooltipDisabled}

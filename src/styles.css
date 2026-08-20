@@ -559,7 +559,6 @@ img,
 }
 
 .cards-grid-item {
-  --thumb-long-side: 80%;
   width: 100%;
   aspect-ratio: 1 / 1;
   display: grid;
@@ -771,7 +770,6 @@ img,
 }
 
 .infinite-cell {
-  --thumb-long-side: 86%;
   position: absolute;
   display: grid;
   place-items: center;
@@ -785,16 +783,6 @@ img,
   background: transparent;
   cursor: pointer;
   touch-action: manipulation;
-}
-
-.card-thumb.is-landscape {
-  width: var(--thumb-long-side);
-  height: calc(var(--thumb-long-side) / var(--card-ratio));
-}
-
-.card-thumb.is-portrait {
-  width: calc(var(--thumb-long-side) / var(--card-ratio));
-  height: var(--thumb-long-side);
 }
 
 .card-thumb-tooltip {

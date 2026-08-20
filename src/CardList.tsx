@@ -51,7 +51,7 @@ const CARD_DEFINITIONS: CardDefinition[] = [
   { id: "marrakechmuseum", label: "Marrakech Museum", description: "ticket to the marrakech museum, in marrakech, by the omar benjelloun foundation.", tags: ["art"] },
   { id: "martharotten", label: "Martha Rotten", description: "very cool online alt/goth hand-made jewelry brand.", tags: ["craftsmanship","fashion"] },
   { id: "musiquenumero1", label: "Musique N°1", description: "music shop, selling instruments and other stuff, in plan-de-campagne.", tags: ["art", "shop"] },
-  { id: "mo-mo", label: "Mo-Mo", description: "good restaurant in marrakech.", tags: ["miscellaneous"] },
+  { id: "mo-mo", label: "Mö-Mö", description: "good restaurant in marrakech.", tags: ["food"] },
   { id: "myjewelledbox", label: "My Jewelled Box", description: "very beautiful and creative artisanal jewelry, seen at the royal mile market in edinburgh.", tags: ["craftsmanship", "fashion", "shop"] },
   { id: "naruto", label: "Naruto", description: "very good japanese restaurant in aix-en-provence. the boss is really nice and makes funny reels on instagram.", tags: ["food"] },
   { id: "newrock", label: "New Rock", description: "Lorem ipsum.", tags: ["fashion"] },

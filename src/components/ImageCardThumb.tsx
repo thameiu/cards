@@ -8,6 +8,7 @@ type ImageCardThumbProps = {
   card: CardData;
   onClick?: () => void;
   className?: string;
+  longSide?: number;
   isTooltipDisabled?: boolean;
   disableNativePress?: boolean;
   disableEffects?: boolean;
@@ -20,13 +21,17 @@ function clamp(value: number, min: number, max: number) {
 
 type ImageLayout = {
   src: string;
-  orientation: "landscape" | "portrait";
+  widthFactor: number;
+  heightFactor: number;
 };
+
+const DEFAULT_CARD_RATIO = 1.54;
 
 export const ImageCardThumb = memo(function ImageCardThumb({
   card,
   onClick,
   className = "",
+  longSide,
   isTooltipDisabled = false,
   disableNativePress = false,
   disableEffects = false,
@@ -43,7 +48,10 @@ export const ImageCardThumb = memo(function ImageCardThumb({
   const [isInEffectRange, setIsInEffectRange] = useState(!limitEffectsToViewport);
   const [loadedLayout, setLoadedLayout] = useState<ImageLayout | null>(null);
   const imageLayout = loadedLayout?.src === card.front ? loadedLayout : null;
-  const orientation = imageLayout?.orientation ?? "landscape";
+  const widthFactor = imageLayout?.widthFactor ?? 1;
+  const heightFactor = imageLayout?.heightFactor ?? 1 / DEFAULT_CARD_RATIO;
+  const sizeValue = longSide ?? 80;
+  const sizeUnit = longSide === undefined ? "%" : "px";
   const isCoarsePointer =
     typeof window !== "undefined" &&
     typeof window.matchMedia === "function" &&
@@ -201,7 +209,11 @@ export const ImageCardThumb = memo(function ImageCardThumb({
       ref={buttonRef}
       type="button"
       data-card-id={card.id}
-      className={`card-thumb is-${orientation} ${className}`.trim()}
+      className={`card-thumb ${className}`.trim()}
+      style={{
+        width: `${sizeValue * widthFactor}${sizeUnit}`,
+        height: `${sizeValue * heightFactor}${sizeUnit}`,
+      }}
       onClick={disableNativePress ? undefined : onClick}
     >
       <div ref={frameRef} className="card-thumb-frame">
@@ -214,16 +226,25 @@ export const ImageCardThumb = memo(function ImageCardThumb({
           onLoad={(event) => {
             const image = event.currentTarget;
             const shortSide = Math.min(image.naturalWidth, image.naturalHeight);
-            const longSide = Math.max(image.naturalWidth, image.naturalHeight);
+            const naturalLongSide = Math.max(image.naturalWidth, image.naturalHeight);
 
-            if (!shortSide || !longSide) {
+            if (!shortSide || !naturalLongSide) {
               return;
             }
 
+            // Fit every image into the same standard-card envelope using its
+            // intrinsic dimensions. This is continuous across all ratios: a
+            // square is neither promoted to a full-height portrait nor given
+            // its own special case.
+            const scale = Math.min(
+              1 / naturalLongSide,
+              1 / (DEFAULT_CARD_RATIO * shortSide)
+            );
+
             setLoadedLayout({
               src: card.front,
-              orientation:
-                image.naturalHeight > image.naturalWidth ? "portrait" : "landscape",
+              widthFactor: image.naturalWidth * scale,
+              heightFactor: image.naturalHeight * scale,
             });
           }}
         />
