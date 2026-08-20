@@ -18,6 +18,11 @@ function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
 
+type ImageLayout = {
+  src: string;
+  orientation: "landscape" | "portrait";
+};
+
 export const ImageCardThumb = memo(function ImageCardThumb({
   card,
   onClick,
@@ -36,7 +41,9 @@ export const ImageCardThumb = memo(function ImageCardThumb({
   const [isHovered, setIsHovered] = useState(false);
   const [canPortal, setCanPortal] = useState(false);
   const [isInEffectRange, setIsInEffectRange] = useState(!limitEffectsToViewport);
-  const [orientation, setOrientation] = useState<"landscape" | "portrait">("landscape");
+  const [loadedLayout, setLoadedLayout] = useState<ImageLayout | null>(null);
+  const imageLayout = loadedLayout?.src === card.front ? loadedLayout : null;
+  const orientation = imageLayout?.orientation ?? "landscape";
   const isCoarsePointer =
     typeof window !== "undefined" &&
     typeof window.matchMedia === "function" &&
@@ -45,10 +52,6 @@ export const ImageCardThumb = memo(function ImageCardThumb({
   useEffect(() => {
     setCanPortal(typeof document !== "undefined");
   }, []);
-
-  useEffect(() => {
-    setOrientation("landscape");
-  }, [card.front]);
 
   useEffect(() => {
     if (!limitEffectsToViewport || typeof IntersectionObserver === "undefined") {
@@ -203,15 +206,25 @@ export const ImageCardThumb = memo(function ImageCardThumb({
     >
       <div ref={frameRef} className="card-thumb-frame">
         <OptimizedImage
+          key={card.front}
           className="card-thumb-media"
           src={card.front}
           alt={card.label}
           fetchPriority="low"
           onLoad={(event) => {
             const image = event.currentTarget;
-            setOrientation(
-              image.naturalHeight > image.naturalWidth ? "portrait" : "landscape"
-            );
+            const shortSide = Math.min(image.naturalWidth, image.naturalHeight);
+            const longSide = Math.max(image.naturalWidth, image.naturalHeight);
+
+            if (!shortSide || !longSide) {
+              return;
+            }
+
+            setLoadedLayout({
+              src: card.front,
+              orientation:
+                image.naturalHeight > image.naturalWidth ? "portrait" : "landscape",
+            });
           }}
         />
       </div>
