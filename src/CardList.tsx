@@ -60,7 +60,7 @@ const CARD_DEFINITIONS: CardDefinition[] = [
   { id: "mo-mo", label: "Mö-Mö", description: "good restaurant in marrakech.", tags: ["food"] },
   { id: "myjewelledbox", label: "My Jewelled Box", description: "very beautiful and creative artisanal jewelry, seen at the royal mile market in edinburgh.", tags: ["craftsmanship", "fashion", "shop"] },
   { id: "naruto", label: "Naruto", description: "very good japanese restaurant in aix-en-provence. the boss is really nice and makes funny reels on instagram.", tags: ["food"] },
-  { id: "newrock", label: "New Rock", description: "Lorem ipsum.", tags: ["fashion"] },
+  { id: "newrock", label: "New Rock", description: "card that came in the package of my very cool new rock boots.", tags: ["fashion"] },
   { id: "nino", label: "Nino", description: "italian restaurant in plan-de-campagne.", tags: ["food"] },
   { id: "noxkensington", label: "Nox Kensington", description: "kensington nox hotel, in london.", tags: ["wellness"] },
   { id: "petrarque&laure", label: "Pétrarque & Laure", description: "restaurant in fontaine-de-vaucluse.", tags: ["food"] },
