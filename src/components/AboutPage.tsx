@@ -351,6 +351,13 @@ export function AboutPage({ cards, totalCardCount }: AboutPageProps) {
           on GitHub. FYI, I will NOT be coding an
           automation to crop and edit the cards correctly, so good luck.{" "}
         </p>*/}
+        <OptimizedImage
+          src="/assets/bunchofcards.svg"
+          alt=""
+          aria-hidden="true"
+          className="about-corner-logo"
+          fetchPriority="low"
+        />
       </div>
     </main>
   );

@@ -29,6 +29,14 @@ export function InitialLoader({ progress }: InitialLoaderProps) {
       <div className="loader initial-loader" aria-hidden="true">
         <div className="loader-popup initial-loader-popup">
           <div className="loader-body initial-loader-body">
+            <img
+              className="loader-logo"
+              src="/assets/bunchofcards.svg"
+              alt=""
+              aria-hidden="true"
+              width="128"
+              height="32"
+            />
             <p className="loader-label initial-loader-label">
               <span className="loader-text">{loadingMessages[messageIndex]}</span>
               <span className="loader-dots">
