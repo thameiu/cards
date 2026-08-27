@@ -7,6 +7,7 @@ import { InitialLoader } from "./components/InitialLoader";
 import { Loader } from "./components/Loader";
 import { RetroHeader } from "./components/RetroHeader";
 import { ScrollableGallery } from "./components/ScrollableGallery";
+import { TarotPage } from "./components/TarotPage";
 import { getImageSourceCandidates } from "./lib/imageSources";
 import type { CardData, CardTag, ViewMode } from "./types";
 
@@ -39,7 +40,12 @@ function getInitialViewMode(): ViewMode {
   }
 
   const storedMode = window.localStorage.getItem(STORAGE_KEY);
-  if (storedMode === "about" || storedMode === "infinite") {
+  if (
+    storedMode === "about" ||
+    storedMode === "scroll" ||
+    storedMode === "infinite" ||
+    storedMode === "tarot"
+  ) {
     return storedMode;
   }
 
@@ -105,6 +111,7 @@ export default function App() {
         new Set([
           ...cardList.flatMap((card) => [card.front, card.back].filter(Boolean) as string[]),
           "/assets/background.jpg",
+          "/assets/tarotbackground.jpg",
           "/assets/pileofcards.png",
           "/assets/thameiu_88x31.webp",
           "/assets/myself.png",
@@ -320,6 +327,13 @@ export default function App() {
               ) : displayMode === "scroll" ? (
                 <ScrollableGallery
                   cards={filteredCards}
+                  onOpenCard={handleOpenCard}
+                  isTooltipDisabled={isFilterHovered}
+                />
+              ) : displayMode === "tarot" ? (
+                <TarotPage
+                  cards={filteredCards}
+                  allCards={cardList}
                   onOpenCard={handleOpenCard}
                   isTooltipDisabled={isFilterHovered}
                 />

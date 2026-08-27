@@ -18,4 +18,4 @@ export type CardData = {
   tags: CardTag[];
 };
 
-export type ViewMode = "about" | "scroll" | "infinite";
+export type ViewMode = "about" | "scroll" | "infinite" | "tarot";

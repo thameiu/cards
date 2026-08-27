@@ -30,7 +30,7 @@ const CARD_DEFINITIONS: CardDefinition[] = [
   { id: "holo", label: "Holo bus card", description: "hawaiian bus card i was provided during a field trip to hawaii.", tags: ["transport"] },
   { id: "kingpins", label: "Kingpins", description: "reusable arcade pass for any kingpins in the uk.", tags: ["miscellaneous"] },
   { id: "ileagammes", label: "Île à Gammes", description: "thanks card that came with my tie accessory order from ile à gammes, great creator, check our her website.", tags: ["fashion"] },
-  { id: "lacageauxfleurs", label: "La Cage aux Fleurs", description: "amazing restaurant in tain-l'hermitage i went to at a business seminar during my internship with miratlas. best white wine of my life.", tags: ["shop"] },
+  { id: "lacageauxfleurs", label: "La Cage aux Fleurs", description: "amazing restaurant in tain-l'hermitage i went to at a business seminar during my internship with miratlas. best white wine of my life.", tags: ["food"] },
   { id: "lacarteblanche", label: "La Carte Blanche", description: "restaurant in marseille.", tags: ["food"] },
   { id: "lamaisondesfondues", label: "La Maison des Fondues", description: "fondue restaurant in aix-en-provence.", tags: ["food"] },
   { id: "lamidupain", label: "L'Ami du Pain", description: "bakery in calas.", tags: ["food"] },

@@ -424,7 +424,8 @@ img,
 
 .cards-scroll,
 .about-page,
-.modal-description {
+.modal-description,
+.tarot-page {
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
@@ -435,7 +436,8 @@ img,
 
 .cards-scroll::-webkit-scrollbar,
 .about-page::-webkit-scrollbar,
-.modal-description::-webkit-scrollbar {
+.modal-description::-webkit-scrollbar,
+.tarot-page::-webkit-scrollbar {
   -webkit-appearance: none;
   appearance: none;
   width: var(--retro-scrollbar-size);
@@ -446,7 +448,8 @@ img,
 
 .cards-scroll::-webkit-scrollbar-track,
 .about-page::-webkit-scrollbar-track,
-.modal-description::-webkit-scrollbar-track {
+.modal-description::-webkit-scrollbar-track,
+.tarot-page::-webkit-scrollbar-track {
   -webkit-appearance: none;
   appearance: none;
   background: var(--retro-panel);
@@ -464,7 +467,8 @@ img,
 
 .cards-scroll::-webkit-scrollbar-thumb,
 .about-page::-webkit-scrollbar-thumb,
-.modal-description::-webkit-scrollbar-thumb {
+.modal-description::-webkit-scrollbar-thumb,
+.tarot-page::-webkit-scrollbar-thumb {
   -webkit-appearance: none;
   appearance: none;
   background: linear-gradient(180deg, #d43ce1 0%, var(--shockpink) 100%);
@@ -488,9 +492,11 @@ img,
 .cards-scroll::-webkit-scrollbar-thumb:vertical,
 .about-page::-webkit-scrollbar-thumb:vertical,
 .modal-description::-webkit-scrollbar-thumb:vertical,
+.tarot-page::-webkit-scrollbar-thumb:vertical,
 .cards-scroll::-webkit-scrollbar-thumb:horizontal,
 .about-page::-webkit-scrollbar-thumb:horizontal,
-.modal-description::-webkit-scrollbar-thumb:horizontal {
+.modal-description::-webkit-scrollbar-thumb:horizontal,
+.tarot-page::-webkit-scrollbar-thumb:horizontal {
   border-radius: 0 !important;
   -webkit-border-radius: 0 !important;
   clip-path: inset(0);
@@ -498,7 +504,8 @@ img,
 
 .cards-scroll::-webkit-scrollbar-button:single-button,
 .about-page::-webkit-scrollbar-button:single-button,
-.modal-description::-webkit-scrollbar-button:single-button {
+.modal-description::-webkit-scrollbar-button:single-button,
+.tarot-page::-webkit-scrollbar-button:single-button {
   -webkit-appearance: none;
   appearance: none;
   display: block;
@@ -521,7 +528,8 @@ img,
 
 .cards-scroll::-webkit-scrollbar-corner,
 .about-page::-webkit-scrollbar-corner,
-.modal-description::-webkit-scrollbar-corner {
+.modal-description::-webkit-scrollbar-corner,
+.tarot-page::-webkit-scrollbar-corner {
   background: var(--retro-panel);
   border-radius: 0 !important;
   -webkit-border-radius: 0 !important;
@@ -529,25 +537,152 @@ img,
 
 .cards-scroll::-webkit-scrollbar-track-piece,
 .about-page::-webkit-scrollbar-track-piece,
-.modal-description::-webkit-scrollbar-track-piece {
+.modal-description::-webkit-scrollbar-track-piece,
+.tarot-page::-webkit-scrollbar-track-piece {
   border-radius: 0 !important;
   -webkit-border-radius: 0 !important;
 }
 
 .cards-scroll::-webkit-scrollbar-button:single-button:vertical:decrement,
 .about-page::-webkit-scrollbar-button:single-button:vertical:decrement,
-.modal-description::-webkit-scrollbar-button:single-button:vertical:decrement {
+.modal-description::-webkit-scrollbar-button:single-button:vertical:decrement,
+.tarot-page::-webkit-scrollbar-button:single-button:vertical:decrement {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='9' viewBox='0 0 9 9'%3E%3Cpath d='M4.5 2 8 6H1Z' fill='%2319001A'/%3E%3C/svg%3E");
 }
 
 .cards-scroll::-webkit-scrollbar-button:single-button:vertical:increment,
 .about-page::-webkit-scrollbar-button:single-button:vertical:increment,
-.modal-description::-webkit-scrollbar-button:single-button:vertical:increment {
+.modal-description::-webkit-scrollbar-button:single-button:vertical:increment,
+.tarot-page::-webkit-scrollbar-button:single-button:vertical:increment {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='9' viewBox='0 0 9 9'%3E%3Cpath d='M1 3h7L4.5 7Z' fill='%2319001A'/%3E%3C/svg%3E");
 }
 
 .cards-scroll {
   padding: 28px 34px 34px;
+}
+
+.tarot-page {
+  --tarot-page-pad-x: 34px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 28px 34px 34px;
+  isolation: isolate;
+}
+
+.tarot-page::before,
+.tarot-page::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: calc(var(--tarot-page-pad-x) * -1);
+  width: calc(100% + (var(--tarot-page-pad-x) * 2));
+  height: clamp(140px, 24vw, 220px);
+  pointer-events: none;
+}
+
+.tarot-page::before {
+  background-image: url("/assets/tarotbackground.png");
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  transform: translateZ(0);
+}
+
+.tarot-page::after {
+  background: linear-gradient(
+    180deg,
+    rgba(250, 249, 250, 0) 0%,
+    rgba(250, 249, 250, 0.06) 50%,
+    rgba(250, 249, 250, 0.74) 78%,
+    rgba(250, 249, 250, 0.98) 92%,
+    rgba(250, 249, 250, 1) 100%
+  );
+}
+
+.tarot-layout {
+  position: relative;
+  z-index: 1;
+  width: min(980px, 100%);
+  display: grid;
+  justify-items: center;
+  gap: 26px;
+}
+
+.tarot-draw-button {
+  min-width: 170px;
+  min-height: 34px;
+  border: 1px solid var(--retro-border);
+  border-radius: 0;
+  padding: 7px 18px;
+  background: var(--retro-panel);
+  color: var(--eggplant);
+  text-transform: lowercase;
+  cursor: pointer;
+  box-shadow:
+    inset 1px 1px 0 var(--retro-panel-light),
+    inset -1px -1px 0 var(--retro-panel-shadow);
+}
+
+.tarot-card-row {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: clamp(18px, 3vw, 34px);
+  flex-wrap: wrap;
+}
+
+.tarot-card-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 420ms ease,
+    transform 420ms ease;
+}
+
+.tarot-card-slot.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.tarot-reading {
+  width: min(720px, 100%);
+  min-height: 88px;
+  padding: 12px 14px;
+  border: 1px solid var(--retro-border);
+  background: var(--retro-panel);
+  box-shadow:
+    inset 1px 1px 0 var(--retro-panel-light),
+    inset -1px -1px 0 var(--retro-panel-shadow);
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease;
+}
+
+.tarot-reading.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.tarot-reading-text {
+  margin: 0;
+  min-height: 3.2em;
+  color: var(--text);
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.tarot-reading-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
 .cards-grid {
@@ -1197,6 +1332,10 @@ img,
   .filter-toggle-button:hover {
     background: #dfdbd5;
   }
+
+  .tarot-draw-button:hover {
+    background: #dfdbd5;
+  }
 }
 
 @media (max-width: 1100px) {
@@ -1269,6 +1408,16 @@ img,
     padding: 20px;
   }
 
+  .tarot-page {
+    --tarot-page-pad-x: 20px;
+    padding: 20px;
+  }
+
+  .tarot-page::before,
+  .tarot-page::after {
+    height: clamp(76px, 24vw, 118px);
+  }
+
   .about-page {
     padding: 0 10px 12px;
   }
@@ -1292,6 +1441,14 @@ img,
 
   .card-thumb {
     margin: 0;
+  }
+
+  .tarot-layout {
+    gap: 20px;
+  }
+
+  .tarot-reading {
+    min-height: 110px;
   }
 
   .modal-panel {

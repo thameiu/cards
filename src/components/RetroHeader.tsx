@@ -15,6 +15,7 @@ const VIEW_OPTIONS: Array<{ mode: ViewMode; label: string }> = [
   { mode: "about", label: "about" },
   { mode: "scroll", label: "scroll" },
   { mode: "infinite", label: "infinity" },
+  { mode: "tarot", label: "tarot" },
 ];
 
 export function RetroHeader({
