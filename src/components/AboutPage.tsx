@@ -312,7 +312,7 @@ export function AboutPage({ cards, totalCardCount }: AboutPageProps) {
 
         <p>
           Then I remembered I’ve been a computer science student for three years. The idea of a
-          digital notebook came to me. So I created “Cards”, a digital binder that currently
+          digital notebook came to me. So I created “bunchofcards”, a digital binder that currently
           contains {totalCardCount} cards, scanned on both sides and then edited and properly
           cropped so they can be displayed exactly as they look in real life.
         </p>

@@ -38,7 +38,7 @@ export function RetroHeader({
             width="32"
             height="32"
           />
-          <span className="retro-brand-text">Cards</span>
+          <span className="retro-brand-text">bunchofcards</span>
         </div>
       </header>
       <div className="retro-menu-bar">

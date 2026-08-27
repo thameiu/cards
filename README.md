@@ -1,6 +1,6 @@
-# thameiu's cards
+# bunchofcards
 
-"cards", yeah that's the name of the project, is a web digital binder which displays my collection of random cards i've accumulated over the years.
+"bunchofcards", is a web digital binder which displays my collection of random cards i've accumulated over the years.
 
 The idea is simple: scan both sides of a card, crop it properly, and drop it into the project so it can be viewed like a real object instead of a flat gallery image.
 
@@ -64,7 +64,7 @@ npm run preview
 
 ## notes
 
-this is not meant to be a generic card CMS or a perfectly automated archive workflow.
+this is not meant to be a CMS or a perfectly automated archive workflow.
 the slow part is still the human one: scanning, cleaning, cropping, naming, etc.
 
 once the images are ready, the app is intentionally lightweight:
