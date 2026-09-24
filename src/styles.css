@@ -22,6 +22,16 @@
   --retro-panel-light: #ffffff;
   --retro-panel-shadow: #7f7f7f;
   --retro-border: #4d4d4d;
+  --xp-pink-gradient:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.96) 0,
+      rgba(255, 255, 255, 0.72) 1px,
+      rgba(80, 0, 88, 0.34) 3px,
+      rgba(92, 0, 101, 0.2) 34%,
+      rgba(255, 255, 255, 0.16) 100%
+    ),
+    linear-gradient(90deg, #df35ed 0%, var(--shockpink) 70%, #9814a3 100%);
   --card-ratio: 1.54;
   --bg: var(--alabaster);
   --text: #111827;
@@ -83,17 +93,22 @@ img,
   width: 100%;
   height: 100%;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: var(--shockpink);
 }
 
 .app-frame {
+  position: relative;
   width: 100%;
-  height: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  border-top: 2px solid var(--shockpink);
-  border-left: 3px solid var(--shockpink);
+  overflow: visible;
+  border-top: 2px solid #f57cff;
+  border-left: 3px solid #df35ed;
   border-right: 4px solid #9814a3;
   border-bottom: 4px solid #9814a3;
   background: linear-gradient(180deg, #fdf8fd 0%, #f5f0f5 100%);
@@ -103,16 +118,70 @@ img,
     inset 0 0 0 2px rgba(196, 27, 212, 0.42);
 }
 
+.app-frame::before,
+.app-frame::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.app-frame::before {
+  top: -2px;
+  right: -4px;
+  bottom: -4px;
+  left: -3px;
+  z-index: 20;
+  background:
+    linear-gradient(
+        180deg,
+        #ffd9ff 0,
+        #9a10a6 4px,
+        #b918c8 15px,
+        #df35ed 32px,
+        #df35ed 100%
+      )
+      left top / 3px 100% no-repeat,
+    linear-gradient(
+        180deg,
+        #ffd0fb 0,
+        #680871 4px,
+        #7d0d87 15px,
+        #9814a3 32px,
+        #9814a3 100%
+      )
+      right top / 4px 100% no-repeat;
+}
+
+.app-frame::after {
+  top: 0;
+  left: -3px;
+  right: -4px;
+  z-index: 21;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.92);
+}
+
 .retro-header {
   position: relative;
-  z-index: 6;
+  z-index: 22;
+  width: 100vw;
+  min-width: 100vw;
+  margin: 0;
+  transform: translateX(-3px);
+  flex: 0 0 30px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   min-height: 30px;
-  padding: 4px 8px;
+  padding: 4px 8px 4px 11px;
   border-bottom: 1px solid #7a0e84;
-  background: linear-gradient(90deg, var(--shockpink) 0%, var(--shockpink) 70%, #a114ad 100%);
+  background: var(--xp-pink-gradient);
   color: #fff;
+  box-shadow: inset 0 -1px 0 rgba(86, 0, 94, 0.38);
+}
+
+.retro-header-close {
+  margin-left: auto;
 }
 
 .retro-brand {
@@ -185,6 +254,159 @@ img,
   min-height: 0;
   isolation: isolate;
   background: linear-gradient(180deg, rgba(255, 250, 254, 0.95), rgba(250, 249, 250, 1));
+}
+
+.xp-taskbar {
+  position: relative;
+  z-index: 10000;
+  flex: 0 0 38px;
+  width: 100%;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 0 0 7px;
+  border-top: 1px solid #7a0e84;
+  background: var(--xp-pink-gradient);
+  color: #fff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    inset 0 -1px 0 rgba(86, 0, 94, 0.42);
+}
+
+.xp-taskbar-apps {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  align-self: stretch;
+  padding: 4px 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.xp-taskbar-apps::-webkit-scrollbar {
+  display: none;
+}
+
+.xp-taskbar-item {
+  position: relative;
+  min-width: 112px;
+  max-width: 210px;
+  height: 29px;
+  flex: 1 1 170px;
+}
+
+.xp-taskbar-app {
+  width: 100%;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 28px 3px 7px;
+  overflow: hidden;
+  border: 1px solid rgba(73, 0, 80, 0.82);
+  border-radius: 3px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.34) 0,
+    rgba(255, 255, 255, 0.08) 48%,
+    rgba(80, 0, 88, 0.2) 100%
+  );
+  color: #fff;
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.48),
+    inset -1px -1px 0 rgba(73, 0, 80, 0.46);
+  cursor: pointer;
+}
+
+.xp-taskbar-close {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  width: 19px;
+  height: 19px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(73, 0, 80, 0.82);
+  border-radius: 2px;
+  background: linear-gradient(180deg, #ef8bf5 0%, #c41bd4 48%, #94119f 100%);
+  color: #fff;
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.58),
+    inset -1px -1px 0 rgba(73, 0, 80, 0.5);
+  font-size: 0.82rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%);
+  transition: opacity 100ms ease;
+}
+
+.xp-taskbar-item:hover .xp-taskbar-close,
+.xp-taskbar-item:focus-within .xp-taskbar-close {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.xp-taskbar-app.is-active {
+  background: linear-gradient(
+    180deg,
+    rgba(91, 0, 100, 0.42) 0,
+    rgba(255, 255, 255, 0.08) 100%
+  );
+  box-shadow:
+    inset 1px 1px 2px rgba(73, 0, 80, 0.68),
+    inset -1px -1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.xp-taskbar-app-icon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  image-rendering: pixelated;
+}
+
+.xp-taskbar-app-label {
+  min-width: 0;
+  overflow: hidden;
+  color: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.xp-taskbar-clock {
+  align-self: stretch;
+  min-width: 76px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  padding: 0 12px;
+  border: 1px solid rgba(96, 0, 105, 0.62);
+  border-top: 0;
+  border-right: 0;
+  border-bottom: 0;
+  border-radius: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.5) 0,
+    rgba(255, 146, 245, 0.3) 100%
+  );
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.62),
+    inset -1px -1px 0 rgba(96, 0, 105, 0.28);
+  color: #fff;
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .gallery-content {
@@ -819,7 +1041,7 @@ img,
 .about-corner-logo {
   position: fixed;
   right: 22px;
-  bottom: 18px;
+  bottom: 56px;
   z-index: 2;
   display: block;
   width: min(180px, 18vw);
@@ -1153,8 +1375,11 @@ img,
   justify-content: space-between;
   gap: 8px;
   padding: 4px 4px 4px 8px;
-  background: var(--shockpink);
+  background: var(--xp-pink-gradient);
   color: #fff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    inset 0 -1px 0 rgba(86, 0, 94, 0.38);
   cursor: move;
   user-select: none;
   touch-action: none;
@@ -1358,6 +1583,14 @@ img,
   .tarot-draw-button:hover {
     background: #dfdbd5;
   }
+
+  .xp-taskbar-app:hover:not(.is-active) {
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.48) 0,
+      rgba(255, 255, 255, 0.14) 100%
+    );
+  }
 }
 
 @media (max-width: 1100px) {
@@ -1379,8 +1612,9 @@ img,
   }
 
   .retro-header {
+    flex-basis: 28px;
     min-height: 28px;
-    padding: 4px 7px;
+    padding: 4px 7px 4px 10px;
   }
 
   .retro-brand-icon {
@@ -1401,6 +1635,28 @@ img,
 
   .retro-menu-button {
     flex: 0 0 auto;
+  }
+
+  .xp-taskbar {
+    flex-basis: 36px;
+    min-height: 36px;
+    gap: 5px;
+    padding-left: 5px;
+  }
+
+  .xp-taskbar-item {
+    min-width: 72px;
+    height: 27px;
+  }
+
+  .xp-taskbar-app {
+    padding-right: 26px;
+  }
+
+  .xp-taskbar-clock {
+    min-width: 62px;
+    padding: 0 7px;
+    font-size: 0.7rem;
   }
 
   .filter-dock {

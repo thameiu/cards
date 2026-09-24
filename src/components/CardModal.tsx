@@ -21,7 +21,13 @@ function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
 
-export function CardModal({ card, initialPosition, zIndex, onFocus, onClose }: CardModalProps) {
+export function CardModal({
+  card,
+  initialPosition,
+  zIndex,
+  onFocus,
+  onClose,
+}: CardModalProps) {
   const [isClosing, setIsClosing] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [position, setPosition] = useState(initialPosition);
@@ -81,7 +87,7 @@ export function CardModal({ card, initialPosition, zIndex, onFocus, onClose }: C
     const minY = galleryRect?.top ?? 0;
     const maxY = Math.max(
       minY,
-      (appFrameRect?.bottom ?? window.innerHeight) - panel.offsetHeight
+      (galleryRect?.bottom ?? appFrameRect?.bottom ?? window.innerHeight) - panel.offsetHeight
     );
 
     return {

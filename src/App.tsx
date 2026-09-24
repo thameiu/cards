@@ -8,6 +8,7 @@ import { Loader } from "./components/Loader";
 import { RetroHeader } from "./components/RetroHeader";
 import { ScrollableGallery } from "./components/ScrollableGallery";
 import { TarotPage } from "./components/TarotPage";
+import { Taskbar } from "./components/Taskbar";
 import { getImageSourceCandidates } from "./lib/imageSources";
 import type { CardData, CardTag, ViewMode } from "./types";
 
@@ -301,6 +302,11 @@ export default function App() {
   const shouldShowGalleryLoader = !areGalleryImagesReady && displayMode !== "about";
   const shouldRenderGalleryContent = areGalleryImagesReady || displayMode === "about";
   const shouldShowInitialLoader = !isInitialLoaderDone && !areSiteAssetsReady;
+  const activeModalId = openModals.length
+    ? openModals.reduce((topmost, modal) =>
+        modal.zIndex > topmost.zIndex ? modal : topmost
+      ).id
+    : null;
 
   if (shouldShowInitialLoader) {
     return <InitialLoader progress={siteLoadProgress} />;
@@ -354,6 +360,12 @@ export default function App() {
           ) : null}
         </div>
       </div>
+      <Taskbar
+        items={openModals}
+        activeItemId={activeModalId}
+        onFocusItem={handleFocusModal}
+        onCloseItem={handleCloseModal}
+      />
       {openModals.map((modal) => (
         <CardModal
           key={modal.id}

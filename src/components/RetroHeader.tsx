@@ -41,6 +41,14 @@ export function RetroHeader({
           />
           <span className="retro-brand-text">bunchofcards</span>
         </div>
+        <button
+          type="button"
+          className="window-button retro-header-close"
+          onClick={() => window.close()}
+          aria-label="Close window"
+        >
+          ×
+        </button>
       </header>
       <div className="retro-menu-bar">
         <nav className="retro-menu-nav" aria-label="Main menu">
