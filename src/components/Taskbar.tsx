@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CardData } from "../types";
 
 type TaskbarItem = {
@@ -21,16 +21,86 @@ function formatTime(date: Date) {
   }).format(date);
 }
 
+function TaskbarGrip() {
+  return (
+    <span className="xp-taskbar-grip" aria-hidden="true">
+      {Array.from({ length: 7 }, (_, index) => (
+        <span key={index} />
+      ))}
+    </span>
+  );
+}
+
 export function Taskbar({ items, activeItemId, onFocusItem, onCloseItem }: TaskbarProps) {
   const [now, setNow] = useState(() => new Date());
+  const [isStartOpen, setIsStartOpen] = useState(false);
+  const startMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(intervalId);
   }, []);
 
+  useEffect(() => {
+    if (!isStartOpen) {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!startMenuRef.current?.contains(event.target as Node)) {
+        setIsStartOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsStartOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isStartOpen]);
+
   return (
     <footer className="xp-taskbar">
+      <div ref={startMenuRef} className={`xp-start${isStartOpen ? " is-open" : ""}`}>
+        <button
+          type="button"
+          className="xp-start-button"
+          onClick={() => setIsStartOpen((isOpen) => !isOpen)}
+          aria-expanded={isStartOpen}
+          aria-controls="xp-start-menu"
+        >
+          <img className="xp-start-button-icon" src="/assets/start.png" alt="" aria-hidden="true" />
+          <span>start</span>
+        </button>
+
+        <section id="xp-start-menu" className="xp-start-menu" aria-hidden={!isStartOpen}>
+          <header className="xp-start-menu-header">
+            <span className="xp-start-avatar-frame">
+              <img src="/assets/filou.png" alt="" aria-hidden="true" />
+            </span>
+            <span className="xp-start-menu-title">thameiu</span>
+          </header>
+          <div className="xp-start-menu-body">
+            <a
+              className="xp-start-menu-item"
+              href="https://rgbast.com"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img src="/assets/RGBAST_start.png" alt="" aria-hidden="true" />
+              <span>RGBAST</span>
+            </a>
+          </div>
+          <div className="xp-start-menu-footer" aria-hidden="true" />
+        </section>
+      </div>
+      <TaskbarGrip />
       <div className="xp-taskbar-apps" aria-label="Open cards">
         {items.map((item) => (
           <div key={item.id} className="xp-taskbar-item">
@@ -63,6 +133,7 @@ export function Taskbar({ items, activeItemId, onFocusItem, onCloseItem }: Taskb
           </div>
         ))}
       </div>
+      <TaskbarGrip />
       <time className="xp-taskbar-clock" dateTime={now.toISOString()}>
         {formatTime(now)}
       </time>

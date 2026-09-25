@@ -7,6 +7,14 @@
 }
 
 @font-face {
+  font-family: "Fira Sans";
+  src: url("/assets/fonts/FiraSans-SemiBoldItalic.ttf") format("truetype");
+  font-style: italic;
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
   font-family: "W95F";
   src: url("/assets/fonts/W95F.otf") format("opentype");
   font-style: normal;
@@ -287,8 +295,8 @@ img,
   min-height: 38px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 0 0 0 7px;
+  gap: 0;
+  padding: 0;
   border-top: 1px solid #7a0e84;
   background: var(--xp-pink-gradient);
   color: #fff;
@@ -296,6 +304,225 @@ img,
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.92),
     inset 0 -1px 0 rgba(86, 0, 94, 0.42);
+}
+
+.xp-start {
+  position: relative;
+  align-self: stretch;
+  flex: 0 0 auto;
+}
+
+.xp-start-button {
+  height: 100%;
+  min-width: 116px;
+  padding: 0 17px 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 7px;
+  border: 0;
+  border-right: 1px solid #716806;
+  border-radius: 0 17px 17px 0;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.94) 0,
+      rgba(255, 255, 255, 0.68) 1px,
+      rgba(72, 65, 0, 0.36) 3px,
+      rgba(96, 87, 0, 0.2) 34%,
+      rgba(255, 255, 255, 0.17) 100%
+    ),
+    linear-gradient(90deg, #aa9d0d 0%, #d4c41b 34%, #f2e335 100%);
+  color: #fff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    inset -1px -1px 0 rgba(75, 68, 0, 0.52);
+  font-family: "Fira Sans", sans-serif;
+  font-size: 1.2rem;
+  font-style: italic;
+  font-weight: 600;
+  line-height: 1;
+  text-shadow: 1px 1px 1px rgba(59, 54, 0, 0.72);
+  cursor: pointer;
+}
+
+.xp-start-button:hover,
+.xp-start.is-open .xp-start-button {
+  filter: brightness(1.08);
+}
+
+.xp-start-button:active,
+.xp-start.is-open .xp-start-button {
+  box-shadow:
+    inset 1px 2px 2px rgba(58, 53, 0, 0.48),
+    inset -1px -1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.xp-start-button-icon {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  filter:
+    drop-shadow(0.5px 0 0 #000)
+    drop-shadow(-0.5px 0 0 #000)
+    drop-shadow(0 0.5px 0 #000)
+    drop-shadow(0 -0.5px 0 #000)
+    drop-shadow(1px 2px 2px rgba(0, 0, 0, 0.5));
+  object-fit: contain;
+}
+
+.xp-start-menu {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 1px);
+  width: min(306px, calc(100vw - 10px));
+  border: 0;
+  background: var(--retro-panel);
+  color: var(--eggplant);
+  box-shadow:
+    inset 1px 0 0 rgba(255, 255, 255, 0.86),
+    inset -1px 0 0 rgba(83, 0, 91, 0.38),
+    3px -3px 8px rgba(25, 0, 26, 0.3);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.xp-start.is-open .xp-start-menu {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.xp-start-menu-header {
+  min-height: 64px;
+  padding: 7px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid #750d80;
+  background: var(--xp-pink-gradient);
+  color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  font-family: "Fira Sans", sans-serif;
+}
+
+.xp-start-avatar-frame {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  padding: 2px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 2px solid #fff;
+  border-radius: 5px;
+  background: #fff;
+  box-shadow: 1px 2px 4px rgba(25, 0, 26, 0.52);
+}
+
+.xp-start-avatar-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  object-fit: cover;
+}
+
+.xp-start-menu-title {
+  font-size: 1.04rem;
+  font-weight: 700;
+  line-height: 1;
+  text-shadow: 1px 1px 1px rgba(70, 0, 77, 0.68);
+}
+
+.xp-start-menu-body {
+  min-height: 112px;
+  padding: 8px;
+  border-top: 1px solid #fff;
+  border-bottom: 1px solid var(--retro-panel-shadow);
+  background: var(--retro-panel);
+  box-shadow:
+    inset 1px 0 0 var(--retro-panel-light),
+    inset -1px 0 0 var(--retro-panel-shadow);
+}
+
+.xp-start-menu-item {
+  min-height: 50px;
+  padding: 5px 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--eggplant);
+  font-family: "W95F", sans-serif;
+  font-size: 0.95rem;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.xp-start-menu-item:hover,
+.xp-start-menu-item:focus-visible {
+  color: var(--shockpink);
+}
+
+.xp-start-menu-item img {
+  display: block;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
+.xp-start-menu-footer {
+  height: 34px;
+  border-top: 1px solid #750d80;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(80, 0, 88, 0.34) 0,
+      rgba(92, 0, 101, 0.2) 34%,
+      rgba(255, 255, 255, 0.16) 100%
+    ),
+    linear-gradient(90deg, #9814a3 0%, var(--shockpink) 30%, #df35ed 100%);
+  box-shadow: inset 0 -1px 0 rgba(86, 0, 94, 0.42);
+}
+
+.xp-taskbar-grip {
+  width: 10px;
+  height: 100%;
+  flex: 0 0 10px;
+  padding: 5px 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.xp-taskbar-grip > span {
+  width: 3px;
+  height: 3px;
+  flex: 0 0 3px;
+  border-radius: 999px;
+  background: rgba(73, 0, 80, 0.72);
+  box-shadow: none;
+}
+
+.xp-taskbar-grip > span:nth-child(odd) {
+  margin-left: 6px;
+}
+
+.xp-taskbar-grip > span:nth-child(even) {
+  margin-left: 1px;
+}
+
+.xp-start + .xp-taskbar-grip {
+  margin-right: 4px;
+  margin-left: 3px;
+}
+
+.xp-taskbar-apps + .xp-taskbar-grip {
+  margin-right: 3px;
+  margin-left: 4px;
 }
 
 .xp-taskbar-apps {
@@ -1726,8 +1953,18 @@ img,
   .xp-taskbar {
     flex-basis: 36px;
     min-height: 36px;
-    gap: 5px;
-    padding-left: 5px;
+    gap: 0;
+    padding-left: 0;
+  }
+
+  .xp-start-button {
+    min-width: 104px;
+    padding-right: 14px;
+  }
+
+  .xp-start-button-icon {
+    width: 24px;
+    height: 24px;
   }
 
   .xp-taskbar-item {

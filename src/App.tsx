@@ -116,6 +116,9 @@ export default function App() {
           "/assets/pileofcards.png",
           "/assets/thameiu_88x31.webp",
           "/assets/myself.png",
+          "/assets/start.png",
+          "/assets/filou.png",
+          "/assets/RGBAST_start.png",
         ])
       ),
     []
