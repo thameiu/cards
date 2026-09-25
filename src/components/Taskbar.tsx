@@ -58,7 +58,7 @@ export function Taskbar({ items, activeItemId, onFocusItem, onCloseItem }: Taskb
               aria-label={`Close ${item.card.label}`}
               title={`Close ${item.card.label}`}
             >
-              ×
+              <span className="window-close-icon" aria-hidden="true" />
             </button>
           </div>
         ))}

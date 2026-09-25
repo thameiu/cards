@@ -81,7 +81,11 @@ export function RetroHeader({
             aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
             title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
           >
-            {isFullscreen ? "❐" : "□"}
+            {isFullscreen ? (
+              "❐"
+            ) : (
+              <span className="window-grow-icon" aria-hidden="true" />
+            )}
           </button>
           <button
             type="button"
@@ -90,7 +94,7 @@ export function RetroHeader({
             aria-label="Close window"
             title="Close window"
           >
-            ×
+            <span className="window-close-icon" aria-hidden="true" />
           </button>
         </div>
       </header>

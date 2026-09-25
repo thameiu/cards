@@ -274,7 +274,11 @@ export function CardModal({
                 onPointerDown={(event) => event.stopPropagation()}
                 aria-label={isFullSize ? "Restore card size" : "Expand card to full size"}
               >
-                {isFullSize ? "❐" : "□"}
+                {isFullSize ? (
+                  "❐"
+                ) : (
+                  <span className="window-grow-icon" aria-hidden="true" />
+                )}
               </button>
             ) : null}
             <button
@@ -284,7 +288,7 @@ export function CardModal({
               onPointerDown={(event) => event.stopPropagation()}
               aria-label="Close card"
             >
-              ×
+              <span className="window-close-icon" aria-hidden="true" />
             </button>
           </div>
         </header>
