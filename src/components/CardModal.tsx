@@ -269,7 +269,7 @@ export function CardModal({
             {!isMobile ? (
               <button
                 type="button"
-                className="window-button"
+                className="window-button window-button-grow"
                 onClick={handleToggleFullSize}
                 onPointerDown={(event) => event.stopPropagation()}
                 aria-label={isFullSize ? "Restore card size" : "Expand card to full size"}
@@ -279,7 +279,7 @@ export function CardModal({
             ) : null}
             <button
               type="button"
-              className="window-button"
+              className="window-button window-button-close"
               onClick={handleClose}
               onPointerDown={(event) => event.stopPropagation()}
               aria-label="Close card"

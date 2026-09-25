@@ -22,6 +22,8 @@
   --retro-panel-light: #ffffff;
   --retro-panel-shadow: #7f7f7f;
   --retro-border: #4d4d4d;
+  --xp-close-gradient: linear-gradient(180deg, #ff989d 0%, #e83f49 48%, #9b1018 100%);
+  --xp-grow-gradient: linear-gradient(180deg, #f58bff 0%, #cc29da 48%, #8c0d98 100%);
   --xp-pink-gradient:
     linear-gradient(
       180deg,
@@ -31,7 +33,7 @@
       rgba(92, 0, 101, 0.2) 34%,
       rgba(255, 255, 255, 0.16) 100%
     ),
-    linear-gradient(90deg, #df35ed 0%, var(--shockpink) 70%, #9814a3 100%);
+    linear-gradient(90deg, #9814a3 0%, var(--shockpink) 30%, #df35ed 100%);
   --card-ratio: 1.54;
   --bg: var(--alabaster);
   --text: #111827;
@@ -107,9 +109,9 @@ img,
   display: flex;
   flex-direction: column;
   overflow: visible;
-  border-top: 2px solid #f57cff;
-  border-left: 3px solid #df35ed;
-  border-right: 4px solid #9814a3;
+  border-top: 0;
+  border-left: 3px solid #9814a3;
+  border-right: 4px solid #df35ed;
   border-bottom: 4px solid #9814a3;
   background: linear-gradient(180deg, #fdf8fd 0%, #f5f0f5 100%);
   box-shadow:
@@ -126,7 +128,7 @@ img,
 }
 
 .app-frame::before {
-  top: -2px;
+  top: 0;
   right: -4px;
   bottom: -4px;
   left: -3px;
@@ -134,20 +136,20 @@ img,
   background:
     linear-gradient(
         180deg,
-        #ffd9ff 0,
-        #9a10a6 4px,
-        #b918c8 15px,
-        #df35ed 32px,
-        #df35ed 100%
-      )
-      left top / 3px 100% no-repeat,
-    linear-gradient(
-        180deg,
         #ffd0fb 0,
         #680871 4px,
         #7d0d87 15px,
         #9814a3 32px,
         #9814a3 100%
+      )
+      left top / 3px 100% no-repeat,
+    linear-gradient(
+        180deg,
+        #ffd9ff 0,
+        #9a10a6 4px,
+        #b918c8 15px,
+        #df35ed 32px,
+        #df35ed 100%
       )
       right top / 4px 100% no-repeat;
 }
@@ -180,8 +182,11 @@ img,
   box-shadow: inset 0 -1px 0 rgba(86, 0, 94, 0.38);
 }
 
-.retro-header-close {
+.retro-header-actions {
   margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .retro-brand {
@@ -331,20 +336,20 @@ img,
   padding: 0;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(73, 0, 80, 0.82);
+  border: 1px solid #7e0b12;
   border-radius: 2px;
-  background: linear-gradient(180deg, #ef8bf5 0%, #c41bd4 48%, #94119f 100%);
+  background: var(--xp-close-gradient);
   color: #fff;
   box-shadow:
     inset 1px 1px 0 rgba(255, 255, 255, 0.58),
-    inset -1px -1px 0 rgba(73, 0, 80, 0.5);
+    inset -1px -1px 0 rgba(91, 0, 6, 0.56);
   font-size: 0.82rem;
   line-height: 1;
   cursor: pointer;
   opacity: 0;
   pointer-events: none;
   transform: translateY(-50%);
-  transition: opacity 100ms ease;
+  transition: none;
 }
 
 .xp-taskbar-item:hover .xp-taskbar-close,
@@ -1339,7 +1344,7 @@ img,
   top: var(--modal-y, 56px);
   width: min(800px, calc(100vw - 32px));
   background: #d4d0c8;
-  border: 1px solid #4d4d4d;
+  border: 0;
   box-shadow:
     inset 1px 1px 0 #ffffff,
     inset -1px -1px 0 #7f7f7f;
@@ -1527,17 +1532,33 @@ img,
   width: 18px;
   height: 18px;
   flex: 0 0 auto;
-  border: 1px solid #6a6a6a;
+  display: grid;
+  place-items: center;
+  border: 1px solid #680871;
+  border-radius: 2px;
   padding: 0;
-  background: #c8c6c2;
-  color: #000;
+  background: var(--xp-grow-gradient);
+  color: #fff;
   font-family: "Atkinson", sans-serif;
   font-size: 0.75rem;
   line-height: 1;
   cursor: pointer;
   box-shadow:
-    inset 1px 1px 0 #f6f4f0,
-    inset -1px -1px 0 #7f7f7f;
+    inset 1px 1px 0 rgba(255, 255, 255, 0.58),
+    inset -1px -1px 0 rgba(73, 0, 80, 0.5);
+}
+
+.window-button-grow {
+  border-color: #680871;
+  background: var(--xp-grow-gradient);
+}
+
+.window-button-close {
+  border-color: #7e0b12;
+  background: var(--xp-close-gradient);
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.58),
+    inset -1px -1px 0 rgba(91, 0, 6, 0.56);
 }
 
 .modal-panel.is-fullsize .window-button {
@@ -1605,7 +1626,7 @@ img,
 
 @media (max-width: 720px) {
   .app-frame {
-    border-top-width: 2px;
+    border-top-width: 0;
     border-left-width: 3px;
     border-right-width: 4px;
     border-bottom-width: 4px;

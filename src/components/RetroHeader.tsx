@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { FilterDock } from "./FilterDock";
 import type { CardTag, ViewMode } from "../types";
 
@@ -27,6 +28,37 @@ export function RetroHeader({
   onToggleTag,
   onFilterHoverChange,
 }: RetroHeaderProps) {
+  const [isFullscreen, setIsFullscreen] = useState(() => Boolean(document.fullscreenElement));
+
+  useEffect(() => {
+    const handleFullscreenChange = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
+  const handleToggleFullscreen = async () => {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      } else {
+        await document.documentElement.requestFullscreen();
+      }
+    } catch {
+      // Fullscreen can be unavailable when the browser or embedding context forbids it.
+    }
+  };
+
+  const handleCloseWindow = () => {
+    const isStandalone = window.matchMedia?.("(display-mode: standalone)").matches ?? false;
+
+    if (window.opener || isStandalone) {
+      window.close();
+      return;
+    }
+
+    window.location.replace("about:blank");
+  };
+
   return (
     <>
       <header className="retro-header">
@@ -41,14 +73,26 @@ export function RetroHeader({
           />
           <span className="retro-brand-text">bunchofcards</span>
         </div>
-        <button
-          type="button"
-          className="window-button retro-header-close"
-          onClick={() => window.close()}
-          aria-label="Close window"
-        >
-          ×
-        </button>
+        <div className="retro-header-actions">
+          <button
+            type="button"
+            className="window-button window-button-grow"
+            onClick={handleToggleFullscreen}
+            aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+            title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+          >
+            {isFullscreen ? "❐" : "□"}
+          </button>
+          <button
+            type="button"
+            className="window-button window-button-close"
+            onClick={handleCloseWindow}
+            aria-label="Close window"
+            title="Close window"
+          >
+            ×
+          </button>
+        </div>
       </header>
       <div className="retro-menu-bar">
         <nav className="retro-menu-nav" aria-label="Main menu">
