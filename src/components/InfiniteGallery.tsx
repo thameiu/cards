@@ -41,7 +41,12 @@ export function InfiniteGallery({
   isTooltipDisabled = false,
 }: InfiniteGalleryProps) {
   const [isDragging, setIsDragging] = useState(false);
-  const [gridWindow, setGridWindow] = useState({ centerCol: 2, centerRow: 2 });
+  const [gridWindow, setGridWindow] = useState({
+    centerCol: 2,
+    centerRow: 2,
+    visibleRangeX: 5,
+    visibleRangeY: 5,
+  });
   const metrics = useViewportMetrics();
   const isCoarsePointer =
     typeof window !== "undefined" &&
@@ -110,13 +115,28 @@ export function InfiniteGallery({
     const scaledStepY = stepY * nextScale;
     const nextCenterCol = Math.round((-nextX + metrics.width / 2) / scaledStepX);
     const nextCenterRow = Math.round((-nextY + metrics.height / 2) / scaledStepY);
+    const nextVisibleRangeX = Math.max(
+      PRELOAD_COLUMNS,
+      Math.ceil(metrics.width / Math.max(scaledStepX, 1) / 2) + 2
+    );
+    const nextVisibleRangeY = Math.max(
+      PRELOAD_ROWS,
+      Math.ceil(metrics.height / Math.max(scaledStepY, 1) / 2) + 2
+    );
     const currentWindow = gridWindowRef.current;
 
     if (
       Math.abs(nextCenterCol - currentWindow.centerCol) > RECENTER_THRESHOLD_X ||
-      Math.abs(nextCenterRow - currentWindow.centerRow) > RECENTER_THRESHOLD_Y
+      Math.abs(nextCenterRow - currentWindow.centerRow) > RECENTER_THRESHOLD_Y ||
+      nextVisibleRangeX !== currentWindow.visibleRangeX ||
+      nextVisibleRangeY !== currentWindow.visibleRangeY
     ) {
-      const nextWindow = { centerCol: nextCenterCol, centerRow: nextCenterRow };
+      const nextWindow = {
+        centerCol: nextCenterCol,
+        centerRow: nextCenterRow,
+        visibleRangeX: nextVisibleRangeX,
+        visibleRangeY: nextVisibleRangeY,
+      };
       gridWindowRef.current = nextWindow;
       setGridWindow(nextWindow);
     }
@@ -130,9 +150,8 @@ export function InfiniteGallery({
     document.documentElement.style.setProperty("--cell-size", `${baseCellSize * scaleRef.current}px`);
   }, [baseCellSize]);
 
-  const zoomAtClientPoint = (
+  const zoomAtStableHorizontalCenter = (
     nextScale: number,
-    clientX: number,
     clientY: number,
     basisScale = scaleTargetRef.current,
     basisX = targetRef.current.x,
@@ -145,7 +164,7 @@ export function InfiniteGallery({
     }
 
     const rect = viewport.getBoundingClientRect();
-    const localX = clientX - rect.left;
+    const localX = rect.width / 2;
     const localY = clientY - rect.top;
     const scaleRatio = nextScale / Math.max(basisScale, 0.0001);
 
@@ -175,7 +194,16 @@ export function InfiniteGallery({
           MIN_ZOOM,
           MAX_ZOOM
         );
-        zoomAtClientPoint(nextScale, event.clientX, event.clientY);
+        zoomAtStableHorizontalCenter(nextScale, event.clientY);
+        return;
+      }
+
+      if (event.shiftKey) {
+        const horizontalDelta = event.deltaY || event.deltaX;
+        targetRef.current = {
+          x: targetRef.current.x - horizontalDelta,
+          y: targetRef.current.y,
+        };
         return;
       }
 
@@ -297,16 +325,14 @@ export function InfiniteGallery({
           secondPointer.x - firstPointer.x,
           secondPointer.y - firstPointer.y
         );
-        const centerX = (firstPointer.x + secondPointer.x) / 2;
         const centerY = (firstPointer.y + secondPointer.y) / 2;
         const nextScale = clamp(
           dragRef.current.scaleStart * (distance / dragRef.current.distanceStart),
           MIN_ZOOM,
           MAX_ZOOM
         );
-        zoomAtClientPoint(
+        zoomAtStableHorizontalCenter(
           nextScale,
-          centerX,
           centerY,
           dragRef.current.scaleStart,
           dragRef.current.originX,
@@ -366,6 +392,9 @@ export function InfiniteGallery({
           scaleStart: scaleTargetRef.current,
           cardId: null,
           moved: true,
+          lastClientX: remainingPointer.x,
+          lastClientY: remainingPointer.y,
+          lastTimeStamp: event.timeStamp,
         };
         return;
       }
@@ -402,17 +431,6 @@ export function InfiniteGallery({
     };
   }, [cardMap, isCoarsePointer, onOpenCard]);
 
-  const scaledStepX = stepX * scaleRef.current;
-  const scaledStepY = stepY * scaleRef.current;
-  const visibleRangeX = Math.max(
-    PRELOAD_COLUMNS,
-    Math.ceil(metrics.width / Math.max(scaledStepX, 1) / 2) + 2
-  );
-  const visibleRangeY = Math.max(
-    PRELOAD_ROWS,
-    Math.ceil(metrics.height / Math.max(scaledStepY, 1) / 2) + 2
-  );
-
   const tiles = useMemo(() => {
     if (!cards.length) {
       return [];
@@ -420,13 +438,13 @@ export function InfiniteGallery({
 
     const nextTiles: Array<{ key: string; row: number; col: number; card: CardData }> = [];
     for (
-      let row = gridWindow.centerRow - visibleRangeY;
-      row <= gridWindow.centerRow + visibleRangeY;
+      let row = gridWindow.centerRow - gridWindow.visibleRangeY;
+      row <= gridWindow.centerRow + gridWindow.visibleRangeY;
       row += 1
     ) {
       for (
-        let col = gridWindow.centerCol - visibleRangeX;
-        col <= gridWindow.centerCol + visibleRangeX;
+        let col = gridWindow.centerCol - gridWindow.visibleRangeX;
+        col <= gridWindow.centerCol + gridWindow.visibleRangeX;
         col += 1
       ) {
         const index = wrap(row * 17 + col * 31, cards.length);
@@ -439,7 +457,7 @@ export function InfiniteGallery({
       }
     }
     return nextTiles;
-  }, [cards, gridWindow.centerCol, gridWindow.centerRow, visibleRangeX, visibleRangeY]);
+  }, [cards, gridWindow]);
   return (
     <main
       ref={viewportRef}

@@ -315,12 +315,10 @@ export function AboutPage({ cards, totalCardCount }: AboutPageProps) {
           digital notebook came to me. So I created “bunchofcards”, a digital binder that currently
           contains {totalCardCount} cards, scanned on both sides and then edited and properly
           cropped so they can be displayed exactly as they look in real life.
-        </p>
-
-        <p>Coding wasn’t the longest part. Scanning and editing all the cards, however…</p>
-
+              </p>
+              
         <p>
-          Anyways, enjoy my digital card notebook, and check out my other projects on my{" "}
+          So enjoy my digital card notebook, and check out my other projects on my{" "}
           <a
             className="about-link"
             href="https://mathieu-hernandez.fr"
